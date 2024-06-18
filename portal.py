@@ -28,7 +28,7 @@ def login(username, password, type):
         '校园网': ''
     }
     user_account = username + '@' + net_types[type]
-    print(user_account)
+    print("登陆账户：", user_account)
     url = f'https://portal.csu.edu.cn:802/eportal/portal/login?user_account={user_account}&user_password={password}'
     response = requests.get(url)
     print(response.text)
