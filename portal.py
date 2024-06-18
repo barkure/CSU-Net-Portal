@@ -39,4 +39,8 @@ def unbind(username):
     response = requests.get(url)
     print(response.text)
 
-
+# 退出
+def logout():
+    url = 'https://portal.csu.edu.cn:802/eportal/portal/logout'
+    response = requests.get(url)
+    print(response.text)
