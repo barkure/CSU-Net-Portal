@@ -45,7 +45,7 @@ def login(username: str, password: str, type: str):
 
 
 # 解绑
-def unbind(username: int):
+def unbind(username: str):
     url = "https://portal.csu.edu.cn:802/eportal/portal/mac/unbind"
     params = {"user_account": username}
     response = requests.get(url, params=params)
