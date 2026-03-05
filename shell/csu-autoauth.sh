@@ -1,9 +1,16 @@
 #!/bin/sh
 
-# === User configuration ===
-username="812345678"
-password="abcdefg"
-type="1"  # 1=China Mobile, 2=China Unicom, 3=China Telecom, 4=Campus Network
+# === Load shared configuration ===
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CONFIG_FILE="$SCRIPT_DIR/../config.env"
+
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Error: config.env not found. Please copy config.env.example to config.env and fill in your credentials."
+    exit 1
+fi
+
+. "$CONFIG_FILE"
+
 interval=10  # Interval between checks (in seconds)
 
 # === Log file ===
