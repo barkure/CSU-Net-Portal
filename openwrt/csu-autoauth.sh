@@ -7,12 +7,7 @@ TYPE="1"  # 1=China Mobile, 2=China Unicom, 3=China Telecom, 4=Campus Network
 INTERVAL=10  # Interval between checks (in seconds)
 
 # === Log location ===
-case "$(uname -s)" in
-    "Darwin") DEFAULT_LOG_DIR="$HOME/Library/Logs/csu-autoauth" ;;
-    *) DEFAULT_LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/csu-autoauth" ;;
-esac
-
-LOG_DIR="${LOG_DIR:-$DEFAULT_LOG_DIR}"
+LOG_DIR="${LOG_DIR:-/tmp/log}"
 LOG_FILE="${LOG_FILE:-$LOG_DIR/csu-autoauth.log}"
 
 # === Network type mapping ===

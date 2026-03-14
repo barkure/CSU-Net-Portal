@@ -1,59 +1,134 @@
+import os
+import time
+from datetime import datetime
+
 import requests
-from urllib.parse import quote
+
+TIMEOUT = 5
+CAPTIVE_CHECK_URL = "http://captive.apple.com"
+LOGIN_URL = "https://portal.csu.edu.cn:802/eportal/portal/login"
+UNBIND_URL = "https://portal.csu.edu.cn:802/eportal/portal/mac/unbind"
+LOGOUT_URL = "https://portal.csu.edu.cn:802/eportal/portal/logout"
+
+NET_SUFFIX_MAP = {
+    "1": "cmccn",
+    "2": "unicomn",
+    "3": "telecomn",
+    "4": "",
+}
 
 
-# 加载页面设置信息
-def load_config():
-    url = "https://portal.csu.edu.cn:802/eportal/portal/page/loadConfig"
-    response = requests.get(url)
-    print(response.text)
+def now() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-# 检查状态
-def check_status():
-    dr = ""
-    url = "https://portal.csu.edu.cn/drcom/chkstatus"
-    params = {"callback": dr}
-    response = requests.get(url, params=params)
-    print(response.text)
+def log(message: str) -> None:
+    print(f"[{now()}] {message}")
 
 
-# 在线数据
-def online_data(username: str, password: str):
-    url = "https://portal.csu.edu.cn:802/eportal/portal/Custom/online_data"
-    encoded_password = quote(password)
-    params = {"username": username, "password": encoded_password}
-    response = requests.get(url, params=params)
-    print(response.text)
+def parse_env_file(env_path: str) -> dict[str, str]:
+    config: dict[str, str] = {}
+
+    with open(env_path, "r", encoding="utf-8") as env_file:
+        for raw_line in env_file:
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            if "#" in line:
+                line = line.split("#", 1)[0].rstrip()
+
+            if "=" not in line:
+                continue
+
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+                value = value[1:-1]
+
+            config[key] = value
+
+    return config
 
 
-# 登录认证
-def login(username: str, password: str, type: str):
-    net_types = {
-        "中国电信": "telecomn",
-        "中国移动": "cmccn",
-        "中国联通": "unicomn",
-        "校园网": "",
+def load_env_config() -> dict[str, str]:
+    env_path = os.path.join(os.path.dirname(__file__), ".env")
+    config = parse_env_file(env_path)
+
+    required_keys = ("USERNAME", "PASSWORD", "TYPE")
+    missing_keys = [key for key in required_keys if not config.get(key)]
+    if missing_keys:
+        missing = ", ".join(missing_keys)
+        raise ValueError(f"Missing required keys in {env_path}: {missing}")
+
+    net_type = str(config["TYPE"])
+    if net_type not in NET_SUFFIX_MAP:
+        raise ValueError("type must be one of: 1, 2, 3, 4")
+
+    interval = str(config.get("INTERVAL", "10"))
+    return {
+        "username": str(config["USERNAME"]),
+        "password": str(config["PASSWORD"]),
+        "type": net_type,
+        "interval": interval,
     }
-    user_account = username + "@" + net_types[type]
-    print("登陆账户：", user_account)
-    url = "https://portal.csu.edu.cn:802/eportal/portal/login"
-    encoded_password = quote(password)
-    params = {"user_account": user_account, "user_password": encoded_password}
-    response = requests.get(url, params=params)
-    print(response.text)
 
 
-# 解绑
-def unbind(username: str):
-    url = "https://portal.csu.edu.cn:802/eportal/portal/mac/unbind"
-    params = {"user_account": username}
-    response = requests.get(url, params=params)
-    print(response.text)
+def build_user_account(username: str, net_type: str) -> str:
+    suffix = NET_SUFFIX_MAP[net_type]
+    return f"{username}@{suffix}" if suffix else username
 
 
-# 退出
-def logout():
-    url = "https://portal.csu.edu.cn:802/eportal/portal/logout"
-    response = requests.get(url)
-    print(response.text)
+def is_online() -> bool:
+    try:
+        response = requests.get(CAPTIVE_CHECK_URL, timeout=TIMEOUT)
+    except requests.RequestException:
+        return False
+    return "Success" in response.text
+
+
+def login(username: str, password: str, net_type: str) -> str:
+    user_account = build_user_account(username, net_type)
+    params = {"user_account": user_account, "user_password": password}
+    response = requests.get(LOGIN_URL, params=params, timeout=TIMEOUT, verify=False)
+    response.raise_for_status()
+    return response.text
+
+
+def unbind(username: str) -> str:
+    response = requests.get(
+        UNBIND_URL,
+        params={"user_account": username},
+        timeout=TIMEOUT,
+        verify=False,
+    )
+    response.raise_for_status()
+    return response.text
+
+
+def logout() -> str:
+    response = requests.get(LOGOUT_URL, timeout=TIMEOUT, verify=False)
+    response.raise_for_status()
+    return response.text
+
+
+def run_autoauth(interval: int) -> None:
+    config = load_env_config()
+    username = config["username"]
+    password = config["password"]
+    net_type = config["type"]
+
+    log(f"Start monitoring network status (every {interval}s)...")
+    while True:
+        if is_online():
+            log("Network up")
+        else:
+            log("Network down, triggering authentication...")
+            try:
+                result = login(username=username, password=password, net_type=net_type)
+                log(f"Login response: {result}")
+            except requests.RequestException as exc:
+                log(f"Authentication failed: {exc}")
+        time.sleep(interval)
