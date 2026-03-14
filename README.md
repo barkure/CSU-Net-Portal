@@ -2,7 +2,7 @@
 自动登录中南大学校园网，保持校园网登录态。
 
 ## 使用方法
-根据自己的情况选择 Python 版本或者 Shell 版本，**推荐使用 Shell 版本**。如果需要在路由器上运行，请查看 OpenWRT。
+根据情况选择 Python 版本或者 Shell 版本，**推荐使用 Shell 版本**。如需在路由器上运行，请查看 [OpenWRT](https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file#openwrt)。
 
 ### Shell
 1. 克隆到本地，并复制 `shell/csu-autoauth.sh` 到合适位置，例如 `~/.local/bin/`；
