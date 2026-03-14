@@ -67,19 +67,27 @@ ssh root@<router-ip>
 opkg update && opkg install curl
 ```
 
-4. 给脚本添加执行权限，并启用服务：
+5. 给脚本添加执行权限，并启用服务：
 ```sh
 chmod +x /usr/bin/csu-autoauth.sh /etc/init.d/csu-autoauth
 /etc/init.d/csu-autoauth enable
 /etc/init.d/csu-autoauth start
 ```
 
-5. 防止 OpenWRT 更新覆盖脚本；
+6. 防止 OpenWRT 更新覆盖脚本；
 ```sh
 cat >> /etc/sysupgrade.conf <<'EOF'
 /usr/bin/csu-autoauth.sh
 /etc/init.d/csu-autoauth
 EOF
+```
+
+7. 更新系统后，大概率需要重新运行一次 4. & 5. 步骤。
+```sh
+opkg update && opkg install curl
+
+/etc/init.d/csu-autoauth enable
+/etc/init.d/csu-autoauth start
 ```
 
 ### Python
