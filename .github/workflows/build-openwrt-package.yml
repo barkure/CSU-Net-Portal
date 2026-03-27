@@ -139,17 +139,20 @@ jobs:
         run: |
           set -eu
           mkdir -p artifacts
+          if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
+            release_version="${GITHUB_REF_NAME#v}"
+          else
+            release_version="$(git rev-parse --short HEAD)"
+          fi
           if [ "$PACKAGE_FORMAT" = "apk" ]; then
             find "$SDK_DIR/bin/packages" -type f -name 'csu-autoauth*.apk' | while read -r pkg; do
-              base="$(basename "$pkg")"
-              renamed="${base%.apk}-${TARGET}-${SUBTARGET}-openwrt-${OPENWRT_VERSION}.apk"
+              renamed="csu-autoauth-${release_version}-${TARGET}-${SUBTARGET}.apk"
               cp "$pkg" "artifacts/$renamed"
               printf '%s -> %s\n' "$pkg" "artifacts/$renamed"
             done
           else
             find "$SDK_DIR/bin/packages" -type f -name 'csu-autoauth*.ipk' | while read -r pkg; do
-              base="$(basename "$pkg")"
-              renamed="${base%.ipk}-${TARGET}-${SUBTARGET}-openwrt-${OPENWRT_VERSION}.ipk"
+              renamed="csu-autoauth-${release_version}-${TARGET}-${SUBTARGET}.ipk"
               cp "$pkg" "artifacts/$renamed"
               printf '%s -> %s\n' "$pkg" "artifacts/$renamed"
             done
