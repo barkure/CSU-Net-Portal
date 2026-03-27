@@ -66,7 +66,15 @@ powershell -ExecutionPolicy Bypass -File $HOME\csu-autoauth.ps1
 4. 脚本默认日志文件：
 - Windows 默认日志文件：`$env:LOCALAPPDATA\csu-autoauth\csu-autoauth.log`
 
-5. 如需后台运行或开机自启，建议使用“任务计划程序”。
+5. 如需开机自启，可执行：
+```powershell
+powershell -ExecutionPolicy Bypass -File .\powershell\install-startup.ps1
+```
+
+该命令会在 Windows Startup 文件夹中创建启动器。取消开机自启可执行：
+```powershell
+powershell -ExecutionPolicy Bypass -File .\powershell\uninstall-startup.ps1
+```
 
 ### OpenWRT
 如果宿舍使用 OpenWRT 系统的路由器，**非常推荐**在路由器上运行自动认证脚本。
