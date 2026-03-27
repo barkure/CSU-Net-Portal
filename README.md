@@ -10,7 +10,7 @@
 # INTERVAL 为自动检测间隔，单位为秒，默认为 10 秒
 ```
 
-根据情况选择 Python 版本或者 Shell 版本，**推荐使用 Shell 版本**。如需在路由器上运行，请查看 [OpenWRT](https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file#openwrt)。
+根据情况选择 Python 版本或者 Shell 版本，**推荐使用 Shell 版本**。如需在路由器上运行，请查看 [OpenWRT](https://github.com/barkure/CSU-Net-Portal#openwrt)。
 
 ### Shell
 1. 克隆到本地，并复制 `shell/csu-autoauth.sh` 到合适位置，例如 `~/.local/bin/`；
