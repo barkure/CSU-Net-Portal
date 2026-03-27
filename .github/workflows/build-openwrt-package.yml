@@ -1,0 +1,116 @@
+name: Build OpenWrt Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      openwrt_version:
+        description: OpenWrt release version
+        required: true
+        default: 25.12.0
+  push:
+    paths:
+      - .github/workflows/build-openwrt-package.yml
+      - openwrt/package/csu-autoauth/**
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86
+            subtarget: 64
+          - target: ramips
+            subtarget: mt7621
+          - target: mediatek
+            subtarget: filogic
+          - target: ipq40xx
+            subtarget: generic
+          - target: rockchip
+            subtarget: armv8
+
+    env:
+      OPENWRT_VERSION: ${{ github.event.inputs.openwrt_version || '25.12.0' }}
+      TARGET: ${{ matrix.target }}
+      SUBTARGET: ${{ matrix.subtarget }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            bison \
+            clang \
+            curl \
+            file \
+            flex \
+            g++ \
+            gawk \
+            gcc-multilib \
+            gettext \
+            git \
+            jq \
+            libncurses-dev \
+            libssl-dev \
+            python3 \
+            python3-setuptools \
+            rsync \
+            swig \
+            unzip \
+            wget \
+            zlib1g-dev \
+            zstd
+
+      - name: Download matching SDK
+        env:
+          SDK_BASE_URL: https://downloads.openwrt.org/releases/${{ env.OPENWRT_VERSION }}/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}
+        run: |
+          set -eu
+          sdk_file="$(curl -fsSL "$SDK_BASE_URL/" | grep -o "openwrt-sdk-${OPENWRT_VERSION}-${TARGET}-${SUBTARGET}[^\"']*Linux-x86_64.tar.zst" | head -n 1)"
+          if [ -z "$sdk_file" ]; then
+            echo "Unable to find SDK in $SDK_BASE_URL/"
+            exit 1
+          fi
+          wget -q "$SDK_BASE_URL/$sdk_file"
+          echo "SDK_FILE=$sdk_file" >> "$GITHUB_ENV"
+          echo "SDK_DIR=${sdk_file%.tar.zst}" >> "$GITHUB_ENV"
+
+      - name: Extract SDK
+        run: tar --zstd -xf "$SDK_FILE"
+
+      - name: Inject package source
+        run: |
+          set -eu
+          mkdir -p "$SDK_DIR/package"
+          rsync -a openwrt/package/csu-autoauth "$SDK_DIR/package/"
+
+      - name: Build package
+        run: |
+          set -eu
+          cd "$SDK_DIR"
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          make defconfig
+          make package/csu-autoauth/compile V=s
+
+      - name: Collect artifacts
+        run: |
+          set -eu
+          mkdir -p artifacts
+          find "$SDK_DIR/bin/packages" -type f -name 'csu-autoauth_*.apk' -exec cp {} artifacts/ \;
+          ls -l artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: csu-autoauth-${{ env.OPENWRT_VERSION }}-${{ env.TARGET }}-${{ env.SUBTARGET }}
+          path: artifacts/*
+          if-no-files-found: error

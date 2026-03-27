@@ -2,6 +2,14 @@
 自动登录中南大学校园网，保持校园网登录态。
 
 ## 使用方法
+主要配置有 `USERNAME`、`PASSWORD`、`TYPE`。
+```
+# USERNAME 为你的学号
+# PASSWORD 为你的密码
+# TYPE 为运营商类型：1=中国移动, 2=中国联通, 3=中国电信, 4=校园网
+# INTERVAL 为自动检测间隔，单位为秒，默认为 10 秒
+```
+
 根据情况选择 Python 版本或者 Shell 版本，**推荐使用 Shell 版本**。如需在路由器上运行，请查看 [OpenWRT](https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file#openwrt)。
 
 ### Shell
@@ -12,7 +20,7 @@ cp shell/csu-autoauth.sh ~/.local/bin/csu-autoauth.sh
 chmod +x ~/.local/bin/csu-autoauth.sh
 ```
 
-2. 修改 `csu-autoauth.sh` 中的配置项，需要填写的主要配置有 `USERNAME`、`PASSWORD`、`TYPE`。`TYPE` 的取值为：`1=中国移动`、`2=中国联通`、`3=中国电信`、`4=校园网`。
+2. 修改 `csu-autoauth.sh` 中的配置项：
 ```bash
 nano ~/.local/bin/csu-autoauth.sh
 # edit the following variables: USERNAME, PASSWORD, TYPE, then save (Ctrl+O) and exit (Ctrl+X).
@@ -41,57 +49,36 @@ journalctl --user -u csu-autoauth.service -f
 ### OpenWRT
 如果宿舍使用 OpenWRT 系统的路由器，**非常推荐**在路由器上运行自动认证脚本。
 
-**你需要能访问路由器的终端（SSH）**。
+请在仓库的 Release 页面下载与你设备架构匹配的 OpenWrt 安装包，再上传到路由器安装。
 
-1. 克隆到本地，并修改相关配置项；
-```bash
-git clone https://github.com/barkure/CSU-Net-Portal.git && cd CSU-Net-Portal
+安装示例：
 
-nano openwrt/csu-autoauth.sh
-# edit the following variables: username, password, type, then save (Ctrl+O) and exit (Ctrl+X).
-```
-
-2. 上传脚本和 init.d 脚本。很多 OpenWRT 设备没有 `sftp-server`，所以建议使用 `scp -O`：
-```bash
-scp -O openwrt/csu-autoauth.sh root@<router-ip>:/usr/bin/csu-autoauth.sh
-scp -O openwrt/init.d.example root@<router-ip>:/etc/init.d/csu-autoauth
-```
-
-3. ssh 登录路由器；
-```bash
-ssh root@<router-ip>
-```
-
-4. 确保路由器上安装了 `curl`，如果没有安装，可以使用以下命令安装：
 ```sh
-opkg update && opkg install curl
+scp -O ./csu-autoauth_*.apk root@<router-ip>:/tmp/csu-autoauth.apk
+ssh root@<router-ip> apk add --allow-untrusted /tmp/csu-autoauth.apk
 ```
 
-5. 给脚本添加执行权限，并启用服务：
+安装完成后，使用 UCI 配置账号密码：
+
 ```sh
-chmod +x /usr/bin/csu-autoauth.sh /etc/init.d/csu-autoauth
-/etc/init.d/csu-autoauth enable
-/etc/init.d/csu-autoauth start
+uci set csu-autoauth.main.username='USERNAME'
+uci set csu-autoauth.main.password='PASSWORD'
+uci set csu-autoauth.main.type='TYPE'
+uci set csu-autoauth.main.interval='10'
+uci commit csu-autoauth
+/etc/init.d/csu-autoauth restart
 ```
 
-6. 防止 OpenWRT 更新覆盖脚本；
-```sh
-cat >> /etc/sysupgrade.conf <<'EOF'
-/usr/bin/csu-autoauth.sh
-/etc/init.d/csu-autoauth
-EOF
-```
+如果仓库软件源可用，包管理器会自动拉取 `curl`；如果软件源不可用，需要先确保路由器能访问对应软件源，或提前准备好离线的依赖包一并安装。
 
-7. 更新系统后，大概率需要重新运行一次 4. & 5. 步骤。
-```sh
-opkg update && opkg install curl
+OpenWrt 包版本维护约定：
 
-/etc/init.d/csu-autoauth enable
-/etc/init.d/csu-autoauth start
-```
+- 程序逻辑变化 -> bump `PKG_VERSION`, reset `PKG_RELEASE` to `1`
+- 仅打包变化 -> bump `PKG_RELEASE` only
+- 仅文档变化 -> no version bump
 
 ### Python
-1. 安装依赖（仅安装 `requests`）：
+1. 安装依赖（`requests`）：
 ```python
 pip install -r python/requirements.txt
 ```
