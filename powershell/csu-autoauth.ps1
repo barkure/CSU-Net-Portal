@@ -69,6 +69,8 @@ function Invoke-Login {
     }
 }
 
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+
 Initialize-LogFile
 Write-Log "Start monitoring network status (every ${INTERVAL}s)..."
 $lastStatus = ""
