@@ -50,6 +50,7 @@ journalctl --user -u csu-autoauth.service -f
 如果宿舍使用 OpenWRT 系统的路由器，**非常推荐**在路由器上运行自动认证脚本。
 
 请在仓库的 Release 页面下载与你设备架构匹配的 OpenWrt 安装包，再上传到路由器安装。
+如果 Release 中没有你设备对应的架构包，请提交 Issue。
 
 安装示例：
 
