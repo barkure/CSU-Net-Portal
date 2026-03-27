@@ -10,7 +10,7 @@
 # INTERVAL 为自动检测间隔，单位为秒，默认为 10 秒
 ```
 
-根据情况选择 Python 版本或者 Shell 版本，**推荐使用 Shell 版本**。如需在路由器上运行，请查看 [OpenWRT](https://github.com/barkure/CSU-Net-Portal#openwrt)。
+根据情况选择 Shell 版本、PowerShell 版本或 OpenWrt 包版本。Linux/macOS 推荐使用 Shell 版本，Windows 推荐使用 PowerShell 版本。如需在路由器上运行，请查看 [OpenWRT](https://github.com/barkure/CSU-Net-Portal#openwrt)。
 
 ### Shell
 1. 克隆到本地，并复制 `shell/csu-autoauth.sh` 到合适位置，例如 `~/.local/bin/`；
@@ -45,6 +45,28 @@ journalctl --user -u csu-autoauth.service -f
 ```
 
 5. 如果你在使用 macOS，可以使用“登录项”添加 `csu-autoauth.sh`，或者使用 `launchd` 创建启动项。
+
+### PowerShell
+1. 克隆到本地，并复制 `powershell/csu-autoauth.ps1` 到合适位置：
+```powershell
+git clone https://github.com/barkure/CSU-Net-Portal.git
+Copy-Item .\CSU-Net-Portal\powershell\csu-autoauth.ps1 $HOME\csu-autoauth.ps1
+```
+
+2. 修改 `csu-autoauth.ps1` 中的配置项：
+```powershell
+notepad $HOME\csu-autoauth.ps1
+```
+
+3. 运行脚本：
+```powershell
+powershell -ExecutionPolicy Bypass -File $HOME\csu-autoauth.ps1
+```
+
+4. 脚本默认日志文件：
+- Windows 默认日志文件：`$env:LOCALAPPDATA\csu-autoauth\csu-autoauth.log`
+
+5. 如需后台运行或开机自启，建议使用“任务计划程序”。
 
 ### OpenWRT
 如果宿舍使用 OpenWRT 系统的路由器，**非常推荐**在路由器上运行自动认证脚本。
@@ -87,12 +109,4 @@ OpenWrt 包版本维护约定：
 - 仅打包变化 -> bump `PKG_RELEASE` only
 - 仅文档变化 -> no version bump
 
-### Python
-1. 安装依赖（`requests`）：
-```python
-pip install -r python/requirements.txt
-```
-
-2. 运行一次认证：`python python/auth.py`
-3. 持续检测断网并自动认证：`python python/autoauth.py`
-4. 关于如何保持在后台运行或开机自启，请自行查阅相关资料，例如在 Linux 上可使用 `nohup`、`systemd`、`launchd` 等工具，在 Windows 上可使用“计划任务”等工具。
+关于如何保持在后台运行或开机自启，请根据所用平台选择合适方式，例如 Linux 可使用 `nohup`、`systemd`，Windows 可使用“任务计划程序”，macOS 可使用 `launchd`。
