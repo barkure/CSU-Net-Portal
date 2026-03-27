@@ -10,7 +10,7 @@
 # INTERVAL 为自动检测间隔，单位为秒，默认为 10 秒
 ```
 
-根据情况选择 Shell 版本、PowerShell 版本或 OpenWrt 包版本。Linux/macOS 推荐使用 Shell 版本，Windows 推荐使用 PowerShell 版本。如需在路由器上运行，请查看 [OpenWRT](https://github.com/barkure/CSU-Net-Portal#openwrt)。
+Linux/macOS 请查看 [Shell](https://github.com/barkure/CSU-Net-Portal#shell)，Windows 请查看 [PowerShell](https://github.com/barkure/CSU-Net-Portal#powershell)，路由器请查看 [OpenWRT](https://github.com/barkure/CSU-Net-Portal#openwrt)。
 
 ### Shell
 1. 克隆到本地，并复制 `shell/csu-autoauth.sh` 到合适位置，例如 `~/.local/bin/`；
