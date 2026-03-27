@@ -1,4 +1,6 @@
 $ErrorActionPreference = "Stop"
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
 
 # === User configuration ===
 $USERNAME = "YOUR_STUDENT_NUMBER"
@@ -26,7 +28,7 @@ function Initialize-LogFile {
     if (-not (Test-Path -LiteralPath $LOG_DIR)) {
         New-Item -ItemType Directory -Path $LOG_DIR -Force | Out-Null
     }
-    "" | Set-Content -Path $LOG_FILE
+    "" | Set-Content -Path $LOG_FILE -Encoding UTF8
 }
 
 function Write-Log {
@@ -34,7 +36,7 @@ function Write-Log {
 
     $line = "[$(Get-TimeStamp)] $Message"
     Write-Output $line
-    Add-Content -Path $LOG_FILE -Value $line
+    Add-Content -Path $LOG_FILE -Value $line -Encoding UTF8
 }
 
 function Get-UserAccount {
