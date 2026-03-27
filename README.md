@@ -108,5 +108,3 @@ OpenWrt 包版本维护约定：
 - 程序逻辑变化 -> bump `PKG_VERSION`, reset `PKG_RELEASE` to `1`
 - 仅打包变化 -> bump `PKG_RELEASE` only
 - 仅文档变化 -> no version bump
-
-关于如何保持在后台运行或开机自启，请根据所用平台选择合适方式，例如 Linux 可使用 `nohup`、`systemd`，Windows 可使用“任务计划程序”，macOS 可使用 `launchd`。
