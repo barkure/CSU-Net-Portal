@@ -47,8 +47,8 @@ function Get-UserAccount {
 
 function Test-Online {
     try {
-        $response = Invoke-WebRequest -Uri "http://captive.apple.com" -TimeoutSec 5 -UseBasicParsing
-        return $response.Content -match "Success"
+        $response = & curl.exe -s --max-time 5 "http://captive.apple.com"
+        return $response -match "Success"
     } catch {
         return $false
     }
@@ -56,20 +56,14 @@ function Test-Online {
 
 function Invoke-Login {
     $userAccount = Get-UserAccount
-    $query = "user_account=$([uri]::EscapeDataString($userAccount))&user_password=$([uri]::EscapeDataString($PASSWORD))"
-    $url = "https://portal.csu.edu.cn:802/eportal/portal/login?$query"
+    $url = "https://portal.csu.edu.cn:802/eportal/portal/login"
 
     Write-Log "Authenticating as: $userAccount"
-    try {
-        [System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
-        $response = Invoke-WebRequest -Uri $url -Method Get -UseBasicParsing -TimeoutSec 10
-        Write-Log "Login response: $($response.Content)"
-    } finally {
-        [System.Net.ServicePointManager]::ServerCertificateValidationCallback = $null
-    }
+    $response = & curl.exe -k -s -G $url `
+        --data-urlencode "user_account=$userAccount" `
+        --data-urlencode "user_password=$PASSWORD"
+    Write-Log "Login response: $response"
 }
-
-[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
 Initialize-LogFile
 Write-Log "Start monitoring network status (every ${INTERVAL}s)..."
