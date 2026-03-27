@@ -5,11 +5,6 @@ env:
 
 on:
   workflow_dispatch:
-    inputs:
-      openwrt_version:
-        description: OpenWrt release version
-        required: true
-        default: 25.12.0
   push:
     tags:
       - 'v*'
@@ -27,19 +22,50 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: x86
+          - openwrt_version: 25.12.0
+            package_format: apk
+            target: x86
             subtarget: 64
-          - target: ramips
+          - openwrt_version: 25.12.0
+            package_format: apk
+            target: ramips
             subtarget: mt7621
-          - target: mediatek
+          - openwrt_version: 25.12.0
+            package_format: apk
+            target: mediatek
             subtarget: filogic
-          - target: ipq40xx
+          - openwrt_version: 25.12.0
+            package_format: apk
+            target: ipq40xx
             subtarget: generic
-          - target: rockchip
+          - openwrt_version: 25.12.0
+            package_format: apk
+            target: rockchip
+            subtarget: armv8
+          - openwrt_version: 24.10.0
+            package_format: ipk
+            target: x86
+            subtarget: 64
+          - openwrt_version: 24.10.0
+            package_format: ipk
+            target: ramips
+            subtarget: mt7621
+          - openwrt_version: 24.10.0
+            package_format: ipk
+            target: mediatek
+            subtarget: filogic
+          - openwrt_version: 24.10.0
+            package_format: ipk
+            target: ipq40xx
+            subtarget: generic
+          - openwrt_version: 24.10.0
+            package_format: ipk
+            target: rockchip
             subtarget: armv8
 
     env:
-      OPENWRT_VERSION: ${{ github.event.inputs.openwrt_version || '25.12.0' }}
+      OPENWRT_VERSION: ${{ matrix.openwrt_version }}
+      PACKAGE_FORMAT: ${{ matrix.package_format }}
       TARGET: ${{ matrix.target }}
       SUBTARGET: ${{ matrix.subtarget }}
 
@@ -103,6 +129,9 @@ jobs:
           set -eu
           cd "$SDK_DIR"
           ./scripts/feeds update base
+          if [ "$PACKAGE_FORMAT" = "ipk" ]; then
+            ./scripts/feeds install curl
+          fi
           make defconfig
           make package/csu-autoauth/compile V=s
 
@@ -110,18 +139,27 @@ jobs:
         run: |
           set -eu
           mkdir -p artifacts
-          find "$SDK_DIR/bin/packages" -type f -name 'csu-autoauth*.apk' | while read -r apk; do
-            base="$(basename "$apk")"
-            renamed="${base%.apk}-${TARGET}-${SUBTARGET}.apk"
-            cp "$apk" "artifacts/$renamed"
-            printf '%s -> %s\n' "$apk" "artifacts/$renamed"
-          done
+          if [ "$PACKAGE_FORMAT" = "apk" ]; then
+            find "$SDK_DIR/bin/packages" -type f -name 'csu-autoauth*.apk' | while read -r pkg; do
+              base="$(basename "$pkg")"
+              renamed="${base%.apk}-${TARGET}-${SUBTARGET}-openwrt-${OPENWRT_VERSION}.apk"
+              cp "$pkg" "artifacts/$renamed"
+              printf '%s -> %s\n' "$pkg" "artifacts/$renamed"
+            done
+          else
+            find "$SDK_DIR/bin/packages" -type f -name 'csu-autoauth*.ipk' | while read -r pkg; do
+              base="$(basename "$pkg")"
+              renamed="${base%.ipk}-${TARGET}-${SUBTARGET}-openwrt-${OPENWRT_VERSION}.ipk"
+              cp "$pkg" "artifacts/$renamed"
+              printf '%s -> %s\n' "$pkg" "artifacts/$renamed"
+            done
+          fi
           ls -l artifacts
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: csu-autoauth-${{ env.OPENWRT_VERSION }}-${{ env.TARGET }}-${{ env.SUBTARGET }}
+          name: csu-autoauth-${{ env.PACKAGE_FORMAT }}-${{ env.OPENWRT_VERSION }}-${{ env.TARGET }}-${{ env.SUBTARGET }}
           path: artifacts/*
           if-no-files-found: error
 
@@ -130,4 +168,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*
-          generate_release_notes: true
+          body: |
+            Prebuilt OpenWrt packages for this release.

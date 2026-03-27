@@ -49,14 +49,23 @@ journalctl --user -u csu-autoauth.service -f
 ### OpenWRT
 如果宿舍使用 OpenWRT 系统的路由器，**非常推荐**在路由器上运行自动认证脚本。
 
-请在仓库的 Release 页面下载与你设备架构匹配的 OpenWrt 安装包，再上传到路由器安装。
+请在仓库的 Release 页面下载与你设备架构和 OpenWrt 版本匹配的安装包，再上传到路由器安装。
 如果 Release 中没有你设备对应的架构包，请提交 Issue。
+
+OpenWrt `25.12+` 使用 `apk`：
 
 安装示例：
 
 ```sh
 scp -O ./csu-autoauth-*.apk root@<router-ip>:/tmp/csu-autoauth.apk
 ssh root@<router-ip> apk add --allow-untrusted /tmp/csu-autoauth.apk
+```
+
+OpenWrt `24.10` 及更早版本使用 `opkg`：
+
+```sh
+scp -O ./csu-autoauth_*.ipk root@<router-ip>:/tmp/csu-autoauth.ipk
+ssh root@<router-ip> opkg install /tmp/csu-autoauth.ipk
 ```
 
 安装完成后，使用 UCI 配置账号密码：
