@@ -1,7 +1,7 @@
 ## CSU-Net-Portal
 自动登录中南大学校园网，保持校园网登录态。
 
-## 使用方法
+## How to use
 主要配置有 `USERNAME`、`PASSWORD`、`TYPE`。
 ```
 # USERNAME 为你的学号
