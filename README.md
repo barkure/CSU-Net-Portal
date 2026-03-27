@@ -85,7 +85,7 @@ powershell -ExecutionPolicy Bypass -File .\powershell\uninstall-startup.ps1
 请在仓库的 Release 页面下载与你设备架构和 OpenWrt 版本匹配的安装包，再上传到路由器安装。
 如果 Release 中没有你设备对应的架构包，请提交 Issue。
 
-OpenWrt在25版本之后使用了新的包管理器 `apk`，请使用对应的包管理器进行安装：
+OpenWrt 目前使用新的包管理器 `apk` 替换了 `opkg`，请使用对应的包管理器进行安装：
 
 - OpenWrt `25.12+` 使用 `apk`：
 
