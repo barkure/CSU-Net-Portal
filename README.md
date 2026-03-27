@@ -54,7 +54,7 @@ journalctl --user -u csu-autoauth.service -f
 安装示例：
 
 ```sh
-scp -O ./csu-autoauth_*.apk root@<router-ip>:/tmp/csu-autoauth.apk
+scp -O ./csu-autoauth-*.apk root@<router-ip>:/tmp/csu-autoauth.apk
 ssh root@<router-ip> apk add --allow-untrusted /tmp/csu-autoauth.apk
 ```
 
