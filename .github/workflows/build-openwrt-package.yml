@@ -1,5 +1,8 @@
 name: Build OpenWrt Package
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   workflow_dispatch:
     inputs:
@@ -42,7 +45,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install build dependencies
         run: |
@@ -107,12 +110,16 @@ jobs:
         run: |
           set -eu
           mkdir -p artifacts
-          find "$SDK_DIR/bin/packages" -type f -name 'csu-autoauth*.apk' -exec cp {} artifacts/ \;
-          find "$SDK_DIR/bin/packages" -type f -name 'csu-autoauth*.apk' -print
+          find "$SDK_DIR/bin/packages" -type f -name 'csu-autoauth*.apk' | while read -r apk; do
+            base="$(basename "$apk")"
+            renamed="${base%.apk}-${TARGET}-${SUBTARGET}.apk"
+            cp "$apk" "artifacts/$renamed"
+            printf '%s -> %s\n' "$apk" "artifacts/$renamed"
+          done
           ls -l artifacts
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: csu-autoauth-${{ env.OPENWRT_VERSION }}-${{ env.TARGET }}-${{ env.SUBTARGET }}
           path: artifacts/*
