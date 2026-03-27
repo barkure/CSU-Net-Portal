@@ -16,7 +16,108 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-push:
+    if: github.ref_type != 'tag'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - openwrt_version: 25.12.0
+            package_format: apk
+            target: mediatek
+            subtarget: filogic
+
+    env:
+      OPENWRT_VERSION: ${{ matrix.openwrt_version }}
+      PACKAGE_FORMAT: ${{ matrix.package_format }}
+      TARGET: ${{ matrix.target }}
+      SUBTARGET: ${{ matrix.subtarget }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            bison \
+            clang \
+            curl \
+            file \
+            flex \
+            g++ \
+            gawk \
+            gcc-multilib \
+            gettext \
+            git \
+            jq \
+            libncurses-dev \
+            libssl-dev \
+            python3 \
+            python3-pyelftools \
+            python3-setuptools \
+            rsync \
+            swig \
+            unzip \
+            wget \
+            zlib1g-dev \
+            zstd
+
+      - name: Download matching SDK
+        env:
+          SDK_BASE_URL: https://downloads.openwrt.org/releases/${{ env.OPENWRT_VERSION }}/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}
+        run: |
+          set -eu
+          sdk_file="$(curl -fsSL "$SDK_BASE_URL/" | grep -o "openwrt-sdk-${OPENWRT_VERSION}-${TARGET}-${SUBTARGET}[^\"']*Linux-x86_64.tar.zst" | head -n 1)"
+          if [ -z "$sdk_file" ]; then
+            echo "Unable to find SDK in $SDK_BASE_URL/"
+            exit 1
+          fi
+          wget -q "$SDK_BASE_URL/$sdk_file"
+          echo "SDK_FILE=$sdk_file" >> "$GITHUB_ENV"
+          echo "SDK_DIR=${sdk_file%.tar.zst}" >> "$GITHUB_ENV"
+
+      - name: Extract SDK
+        run: tar --zstd -xf "$SDK_FILE"
+
+      - name: Inject package source
+        run: |
+          set -eu
+          mkdir -p "$SDK_DIR/package"
+          rsync -a openwrt/package/csu-autoauth "$SDK_DIR/package/"
+
+      - name: Build package
+        run: |
+          set -eu
+          cd "$SDK_DIR"
+          ./scripts/feeds update base
+          make defconfig
+          make package/csu-autoauth/compile V=s
+
+      - name: Collect artifacts
+        run: |
+          set -eu
+          mkdir -p artifacts
+          release_version="$(git rev-parse --short HEAD)"
+          find "$SDK_DIR/bin/packages" -type f -name 'csu-autoauth*.apk' | while read -r pkg; do
+            renamed="csu-autoauth-${release_version}-${TARGET}-${SUBTARGET}.apk"
+            cp "$pkg" "artifacts/$renamed"
+            printf '%s -> %s\n' "$pkg" "artifacts/$renamed"
+          done
+          ls -l artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: csu-autoauth-${{ env.PACKAGE_FORMAT }}-${{ env.OPENWRT_VERSION }}-${{ env.TARGET }}-${{ env.SUBTARGET }}
+          path: artifacts/*
+          if-no-files-found: error
+
+  build-release:
+    if: github.ref_type == 'tag'
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -139,11 +240,7 @@ jobs:
         run: |
           set -eu
           mkdir -p artifacts
-          if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
-            release_version="${GITHUB_REF_NAME#v}"
-          else
-            release_version="$(git rev-parse --short HEAD)"
-          fi
+          release_version="${GITHUB_REF_NAME#v}"
           if [ "$PACKAGE_FORMAT" = "apk" ]; then
             find "$SDK_DIR/bin/packages" -type f -name 'csu-autoauth*.apk' | while read -r pkg; do
               renamed="csu-autoauth-${release_version}-${TARGET}-${SUBTARGET}.apk"
@@ -167,8 +264,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish release assets
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.5.0
         with:
           files: artifacts/*
           body: |
