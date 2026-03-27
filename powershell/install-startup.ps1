@@ -15,3 +15,19 @@ powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -File "$scriptPath"
 
 Set-Content -Path $launcherPath -Value $launcherContent -Encoding ASCII
 Write-Output "Startup launcher created: $launcherPath"
+
+$runningProcesses = Get-CimInstance Win32_Process | Where-Object {
+    $_.Name -match '^powershell(\.exe)?$' -and $_.CommandLine -like "*$scriptPath*"
+}
+
+if (-not $runningProcesses) {
+    Start-Process powershell.exe -WindowStyle Hidden -ArgumentList @(
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        $scriptPath
+    )
+    Write-Output "Script started in background: $scriptPath"
+} else {
+    Write-Output "Script is already running: $scriptPath"
+}

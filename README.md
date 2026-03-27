@@ -10,7 +10,7 @@
 # INTERVAL 为自动检测间隔，单位为秒，默认为 10 秒
 ```
 
-Linux/macOS 请查看 [Shell](https://github.com/barkure/CSU-Net-Portal#shell)，Windows 请查看 [PowerShell](https://github.com/barkure/CSU-Net-Portal#powershell)，路由器请查看 [OpenWRT](https://github.com/barkure/CSU-Net-Portal#openwrt)。
+Linux/macOS 请查看 [Shell](https://github.com/barkure/CSU-Net-Portal#shell)，Windows 请查看 [PowerShell](https://github.com/barkure/CSU-Net-Portal#powershell)，OpenWRT 路由器请查看 [OpenWRT](https://github.com/barkure/CSU-Net-Portal#openwrt)。
 
 ### Shell
 1. 克隆到本地，并复制 `shell/csu-autoauth.sh` 到合适位置，例如 `~/.local/bin/`；
@@ -50,7 +50,8 @@ journalctl --user -u csu-autoauth.service -f
 1. 克隆到本地，并复制 `powershell/csu-autoauth.ps1` 到合适位置：
 ```powershell
 git clone https://github.com/barkure/CSU-Net-Portal.git
-Copy-Item .\CSU-Net-Portal\powershell\csu-autoauth.ps1 $HOME\csu-autoauth.ps1
+cd .\CSU-Net-Portal
+Copy-Item .\powershell\csu-autoauth.ps1 $HOME\csu-autoauth.ps1
 ```
 
 2. 修改 `csu-autoauth.ps1` 中的配置项：
@@ -63,35 +64,37 @@ notepad $HOME\csu-autoauth.ps1
 powershell -ExecutionPolicy Bypass -File $HOME\csu-autoauth.ps1
 ```
 
-4. 脚本默认日志文件：
-- Windows 默认日志文件：`$env:LOCALAPPDATA\csu-autoauth\csu-autoauth.log`
-
-5. 如需开机自启，可执行：
+4. 如需开机自启，可执行：
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\powershell\install-startup.ps1
 ```
 
-该命令会在 Windows Startup 文件夹中创建启动器。取消开机自启可执行：
+该命令会在 Windows Startup 文件夹中创建启动器，并立即在后台启动脚本。
+
+5. 取消开机自启可执行：
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\powershell\uninstall-startup.ps1
 ```
 
-### OpenWRT
-如果宿舍使用 OpenWRT 系统的路由器，**非常推荐**在路由器上运行自动认证脚本。
+该命令会删除 Startup 启动器，并停止当前正在运行的脚本进程。
 
+6. 脚本默认日志文件：
+- Windows 默认日志文件：`$env:LOCALAPPDATA\csu-autoauth\csu-autoauth.log`
+
+### OpenWRT
 请在仓库的 Release 页面下载与你设备架构和 OpenWrt 版本匹配的安装包，再上传到路由器安装。
 如果 Release 中没有你设备对应的架构包，请提交 Issue。
 
-OpenWrt `25.12+` 使用 `apk`：
+OpenWrt在25版本之后使用了新的包管理器 `apk`，请使用对应的包管理器进行安装：
 
-安装示例：
+- OpenWrt `25.12+` 使用 `apk`：
 
 ```sh
 scp -O ./csu-autoauth-*.apk root@<router-ip>:/tmp/csu-autoauth.apk
 ssh root@<router-ip> apk add --allow-untrusted /tmp/csu-autoauth.apk
 ```
 
-OpenWrt `24.10` 及更早版本使用 `opkg`：
+- OpenWrt `24.10` 及更早版本使用 `opkg`：
 
 ```sh
 scp -O ./csu-autoauth_*.ipk root@<router-ip>:/tmp/csu-autoauth.ipk
