@@ -10,7 +10,7 @@
 # INTERVAL 为自动检测间隔，单位为秒，默认为 10 秒
 ```
 
-Linux/macOS 请查看 [Shell](https://github.com/barkure/CSU-Net-Portal#shell)，Windows 请查看 [PowerShell](https://github.com/barkure/CSU-Net-Portal#powershell)，OpenWRT 路由器请查看 [OpenWRT](https://github.com/barkure/CSU-Net-Portal#openwrt)。
+Linux/macOS 请查看 [Shell](https://github.com/barkure/CSU-Net-Portal#shell)，Windows 请查看 [PowerShell](https://github.com/barkure/CSU-Net-Portal#powershell)，OpenWrt 路由器请查看 [OpenWrt](https://github.com/barkure/CSU-Net-Portal#openWrt)。
 
 ### Shell
 1. 克隆到本地，并复制 `shell/csu-autoauth.sh` 到合适位置，例如 `~/.local/bin/`；
@@ -81,9 +81,10 @@ powershell -ExecutionPolicy Bypass -File .\powershell\uninstall-startup.ps1
 6. 脚本默认日志文件：
 - Windows 默认日志文件：`$env:LOCALAPPDATA\csu-autoauth\csu-autoauth.log`
 
-### OpenWRT
+### OpenWrt
 请在仓库的 Release 页面下载与你设备架构和 OpenWrt 版本匹配的安装包，再上传到路由器安装。
 如果 Release 中没有你设备对应的架构包，请提交 Issue。
+认证接口默认直连 `10.1.1.1`，以避免 OpenWrt 本地 DNS 解析链路带来的干扰。
 
 OpenWrt 目前使用新的包管理器 `apk` 替换了 `opkg`，请使用对应的包管理器进行安装：
 

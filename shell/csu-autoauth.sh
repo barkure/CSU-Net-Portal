@@ -55,7 +55,7 @@ login() {
         USER_ACCOUNT="$USERNAME"
     fi
 
-    URL="https://portal.csu.edu.cn:802/eportal/portal/login"
+    URL="https://10.1.1.1:802/eportal/portal/login"
     log "Authenticating as: $USER_ACCOUNT"
     response=$(curl -k -s -G "$URL" \
         -d "user_account=$USER_ACCOUNT" \

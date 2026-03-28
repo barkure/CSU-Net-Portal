@@ -58,7 +58,7 @@ function Test-Online {
 
 function Invoke-Login {
     $userAccount = Get-UserAccount
-    $url = "https://portal.csu.edu.cn:802/eportal/portal/login"
+    $url = "https://10.1.1.1:802/eportal/portal/login"
 
     Write-Log "Authenticating as: $userAccount"
     $response = & curl.exe -k -s -G $url `
