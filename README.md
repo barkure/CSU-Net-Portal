@@ -1,7 +1,7 @@
-## CSU-Net-Portal
+# CSU-Net-Portal
 自动登录中南大学校园网，保持校园网登录态。
 
-## How to use
+# How to use
 主要配置有 `USERNAME`、`PASSWORD`、`TYPE`。
 ```
 # USERNAME 为你的学号
@@ -16,8 +16,8 @@
 - [PowerShell (Windows)](https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file#powershell)
 - [OpenWrt](https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file#openwrt)
 
-### Shell (Linux)
-#### 安装
+## Shell (Linux)
+### 安装
 1. 克隆到本地并安装脚本和配置文件：
 ```bash
 git clone https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file.git && cd CSU-Net-Portal
@@ -37,7 +37,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now csu-autoauth.service
 ```
 
-#### 其他
+### 其他
 - 脚本遵循 [文件系统层次结构标准 (FHS)](https://zh.wikipedia.org/wiki/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84%E6%A0%87%E5%87%86)：
 ```
 - /usr/local/bin/csu-autoauth
@@ -56,8 +56,8 @@ systemctl status csu-autoauth.service
 journalctl -u csu-autoauth.service -f
 ```
 
-### Shell (macOS)
-#### 安装
+## Shell (macOS)
+### 安装
 1. 克隆到本地：
 ```bash
 git clone https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file.git && cd CSU-Net-Portal
@@ -73,7 +73,7 @@ nano shell/macos/config.conf.example
 sh shell/macos/install-launchd.sh
 ```
 
-#### 其他
+### 其他
 - 该脚本会自动创建：
 ```
 - ~/.local/bin/csu-autoauth
@@ -94,45 +94,37 @@ sh shell/macos/uninstall-launchd.sh
 - ~/Library/Logs/csu-autoauth/launchd.err.log
 ```
 
-### PowerShell
-1. 克隆到本地，并复制 `powershell/csu-autoauth.ps1` 到合适位置：
+## PowerShell
+### 安装
+1. 克隆到本地：
 ```powershell
-git clone https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file.git
-cd .\CSU-Net-Portal
-Copy-Item .\powershell\csu-autoauth.ps1 $HOME\csu-autoauth.ps1
+git clone https://github.com/barkure/CSU-Net-Portal.git; cd .\CSU-Net-Portal
 ```
 
-2. 修改 `csu-autoauth.ps1` 中的配置项：
+2. 修改配置模板：
 ```powershell
-notepad $HOME\csu-autoauth.ps1
+notepad .\powershell\config.ps1.example
 ```
 
-3. 运行脚本：
-```powershell
-powershell -ExecutionPolicy Bypass -File $HOME\csu-autoauth.ps1
-```
-
-4. 如需开机自启，可执行：
+3. 安装并启用自启动：
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\powershell\install-startup.ps1
 ```
 
-该命令会在 Windows Startup 文件夹中创建启动器，并立即在后台启动脚本。
+该命令会在 Windows Startup 文件夹中创建启动器，并自动安装：
+- `$HOME\csu-autoauth.ps1`
+- `$HOME\.config\csu-autoauth\config.ps1`
 
-5. 取消开机自启可执行：
+### 其他
+- 取消自启并即刻停止：
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\powershell\uninstall-startup.ps1
 ```
 
-该命令会删除 Startup 启动器，并停止当前正在运行的脚本进程。
+- 默认日志文件：`$env:LOCALAPPDATA\csu-autoauth\csu-autoauth.log`
 
-6. 脚本默认日志文件：
-- Windows 默认日志文件：`$env:LOCALAPPDATA\csu-autoauth\csu-autoauth.log`
-
-### OpenWrt
+## OpenWrt
 请在仓库的 Release 页面下载与你设备架构和 OpenWrt 版本匹配的安装包，再上传到路由器安装。
-如果 Release 中没有你设备对应的架构包，请提交 Issue。
-认证接口默认直连 `10.1.1.1`，以避免 OpenWrt 本地 DNS 解析链路带来的干扰。
 
 OpenWrt 目前使用新的包管理器 `apk` 替换了 `opkg`，请使用对应的包管理器进行安装：
 

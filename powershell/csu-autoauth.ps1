@@ -2,11 +2,18 @@ $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
+$configDir = Join-Path $HOME ".config\csu-autoauth"
+$configPath = Join-Path $configDir "config.ps1"
+
 # === User configuration ===
-$USERNAME = "YOUR_STUDENT_NUMBER"
-$PASSWORD = "YOUR_PASSWORD"
-$TYPE = "1"  # 1=China Mobile, 2=China Unicom, 3=China Telecom, 4=Campus Network
+$USERNAME = ""
+$PASSWORD = ""
+$TYPE = "1"
 $INTERVAL = 10
+
+if (Test-Path -LiteralPath $configPath) {
+    . $configPath
+}
 
 # === Log location ===
 $defaultLogDir = Join-Path $env:LOCALAPPDATA "csu-autoauth"
@@ -39,6 +46,12 @@ function Write-Log {
     Add-Content -Path $LOG_FILE -Value $line -Encoding UTF8
 }
 
+function Test-Config {
+    if ([string]::IsNullOrWhiteSpace($USERNAME) -or [string]::IsNullOrWhiteSpace($PASSWORD)) {
+        throw "Missing USERNAME or PASSWORD in $configPath"
+    }
+}
+
 function Get-UserAccount {
     $suffix = $NET_SUFFIX_MAP[$TYPE]
     if ($suffix) {
@@ -67,6 +80,7 @@ function Invoke-Login {
     Write-Log "Login response: $response"
 }
 
+Test-Config
 Initialize-LogFile
 Write-Log "Start monitoring network status (every ${INTERVAL}s)..."
 $lastStatus = ""
