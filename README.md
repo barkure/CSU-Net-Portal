@@ -11,16 +11,16 @@
 ```
 
 有如下四个版本：
-- [Shell (Linux)](https://github.com/barkure/CSU-Net-Portal#shell-linux)
-- [Shell (macOS)](https://github.com/barkure/CSU-Net-Portal#shell-macos)
-- [PowerShell (Windows)](https://github.com/barkure/CSU-Net-Portal#powershell)
-- [OpenWrt](https://github.com/barkure/CSU-Net-Portal#openwrt)
+- [Shell (Linux)](https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file#shell-linux)
+- [Shell (macOS)](https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file#shell-macos)
+- [PowerShell (Windows)](https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file#powershell)
+- [OpenWrt](https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file#openwrt)
 
 ### Shell (Linux)
 #### 安装
 1. 克隆到本地并安装脚本和配置文件：
 ```bash
-git clone https://github.com/barkure/CSU-Net-Portal.git && cd CSU-Net-Portal
+git clone https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file.git && cd CSU-Net-Portal
 sudo install -D -m 755 shell/linux/csu-autoauth.sh /usr/local/bin/csu-autoauth
 sudo install -D -m 644 shell/linux/config.conf.example /usr/local/etc/csu-autoauth/config.conf
 ```
@@ -60,7 +60,7 @@ journalctl -u csu-autoauth.service -f
 #### 安装
 1. 克隆到本地：
 ```bash
-git clone https://github.com/barkure/CSU-Net-Portal.git && cd CSU-Net-Portal
+git clone https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file.git && cd CSU-Net-Portal
 ```
 
 2. 修改配置模板：
@@ -97,7 +97,7 @@ sh shell/macos/uninstall-launchd.sh
 ### PowerShell
 1. 克隆到本地，并复制 `powershell/csu-autoauth.ps1` 到合适位置：
 ```powershell
-git clone https://github.com/barkure/CSU-Net-Portal.git
+git clone https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file.git
 cd .\CSU-Net-Portal
 Copy-Item .\powershell\csu-autoauth.ps1 $HOME\csu-autoauth.ps1
 ```
