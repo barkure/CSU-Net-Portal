@@ -1,17 +1,20 @@
 #!/bin/sh
 
+CONFIG_FILE="${CONFIG_FILE:-$HOME/.config/csu-autoauth/config.conf}"
+
 # === User configuration ===
-USERNAME="YOUR_STUDENT_NUMBER" # Your student number, e.g., 812345678
-PASSWORD="YOUR_PASSWORD" # Your password
-TYPE="1"  # 1=China Mobile, 2=China Unicom, 3=China Telecom, 4=Campus Network
-INTERVAL=10  # Interval between checks (in seconds)
+USERNAME=""
+PASSWORD=""
+TYPE="1"
+INTERVAL=10
+
+if [ -f "$CONFIG_FILE" ]; then
+    # shellcheck disable=SC1090
+    . "$CONFIG_FILE"
+fi
 
 # === Log location ===
-case "$(uname -s)" in
-    "Darwin") DEFAULT_LOG_DIR="$HOME/Library/Logs/csu-autoauth" ;;
-    *) DEFAULT_LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/csu-autoauth" ;;
-esac
-
+DEFAULT_LOG_DIR="$HOME/Library/Logs/csu-autoauth"
 LOG_DIR="${LOG_DIR:-$DEFAULT_LOG_DIR}"
 LOG_FILE="${LOG_FILE:-$LOG_DIR/csu-autoauth.log}"
 
@@ -42,6 +45,13 @@ log() {
     printf '%s\n' "$message" >> "$LOG_FILE"
 }
 
+validate_config() {
+    if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ]; then
+        echo "Missing USERNAME or PASSWORD in $CONFIG_FILE" >&2
+        exit 1
+    fi
+}
+
 # === Check if network is online ===
 is_online() {
     curl -s --max-time 5 http://captive.apple.com | grep -q "Success"
@@ -64,6 +74,7 @@ login() {
 }
 
 # === Main loop ===
+validate_config
 init_log_file
 log "Start monitoring network status (every ${INTERVAL}s)..."
 LAST_STATUS=""

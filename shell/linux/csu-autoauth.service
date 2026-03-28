@@ -1,0 +1,13 @@
+[Unit]
+Description=CSU Network Auto Auth
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/csu-autoauth
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

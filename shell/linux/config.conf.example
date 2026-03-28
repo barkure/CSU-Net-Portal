@@ -1,0 +1,4 @@
+USERNAME="YOUR_STUDENT_NUMBER"
+PASSWORD="YOUR_PASSWORD"
+TYPE="1"  # 1=China Mobile, 2=China Unicom, 3=China Telecom, 4=Campus Network
+INTERVAL="10"

@@ -10,41 +10,82 @@
 # INTERVAL 为自动检测间隔，单位为秒，默认为 10 秒
 ```
 
-Linux/macOS 请查看 [Shell](https://github.com/barkure/CSU-Net-Portal#shell)，Windows 请查看 [PowerShell](https://github.com/barkure/CSU-Net-Portal#powershell)，OpenWrt 路由器请查看 [OpenWrt](https://github.com/barkure/CSU-Net-Portal#openWrt)。
+Linux 请查看 [Shell (Linux)](https://github.com/barkure/CSU-Net-Portal#shell-linux)，macOS 请查看 [Shell (macOS)](https://github.com/barkure/CSU-Net-Portal#shell-macos)，Windows 请查看 [PowerShell](https://github.com/barkure/CSU-Net-Portal#powershell)，OpenWrt 路由器请查看 [OpenWrt](https://github.com/barkure/CSU-Net-Portal#openwrt)。
 
-### Shell
-1. 克隆到本地，并复制 `shell/csu-autoauth.sh` 到合适位置，例如 `~/.local/bin/`；
+### Shell (Linux)
+#### 安装
+1. 克隆到本地并安装脚本和配置文件：
 ```bash
 git clone https://github.com/barkure/CSU-Net-Portal.git && cd CSU-Net-Portal
-cp shell/csu-autoauth.sh ~/.local/bin/csu-autoauth.sh
-chmod +x ~/.local/bin/csu-autoauth.sh
+sudo install -D -m 755 shell/linux/csu-autoauth.sh /usr/local/bin/csu-autoauth
+sudo install -D -m 644 shell/linux/config.conf.example /usr/local/etc/csu-autoauth/config.conf
 ```
 
-2. 修改 `csu-autoauth.sh` 中的配置项：
+2. 修改配置：
 ```bash
-nano ~/.local/bin/csu-autoauth.sh
-# edit the following variables: USERNAME, PASSWORD, TYPE, then save (Ctrl+O) and exit (Ctrl+X).
+sudo nano /usr/local/etc/csu-autoauth/config.conf
 ```
 
-3. 脚本会自动创建日志目录并写入日志：
-- macOS 默认日志文件：`~/Library/Logs/csu-autoauth/csu-autoauth.log`
-- Linux 默认日志文件：`${XDG_STATE_HOME:-$HOME/.local/state}/csu-autoauth/csu-autoauth.log`
-
-4. 添加到系统启动项（以 Linux systemd 为例）：
+3. 添加到系统启动项：
 ```bash
-mkdir -p ~/.config/systemd/user
-cp shell/csu-autoauth.service.example ~/.config/systemd/user/csu-autoauth.service
-systemctl --user daemon-reload
-systemctl --user enable --now csu-autoauth.service
+sudo cp shell/linux/csu-autoauth.service /etc/systemd/system/csu-autoauth.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now csu-autoauth.service
+```
+
+#### 其他
+
+[文件系统层次结构标准 (FHS)](https://zh.wikipedia.org/wiki/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84%E6%A0%87%E5%87%86)：
+```
+- /usr/local/bin/csu-autoauth
+- /usr/local/etc/csu-autoauth/config.conf
+- /var/log/csu-autoauth/csu-autoauth.log
+- /etc/systemd/system/csu-autoauth.service
 ```
 
 查看运行状态和日志：
 ```bash
-systemctl --user status csu-autoauth.service
-journalctl --user -u csu-autoauth.service -f
+systemctl status csu-autoauth.service
+journalctl -u csu-autoauth.service -f
 ```
 
-5. 如果你在使用 macOS，可以使用“登录项”添加 `csu-autoauth.sh`，或者使用 `launchd` 创建启动项。
+### Shell (macOS)
+#### 安装
+1. 克隆到本地：
+```bash
+git clone https://github.com/barkure/CSU-Net-Portal.git && cd CSU-Net-Portal
+```
+
+2. 修改配置模板：
+```bash
+nano shell/macos/config.conf.example
+```
+
+3. 安装 `launchd` 服务：
+```bash
+sh shell/macos/install-launchd.sh
+```
+
+#### 其他
+- 该脚本会自动创建：
+```
+- ~/.local/bin/csu-autoauth
+- ~/.config/csu-autoauth/config.conf
+- ~/Library/Logs/csu-autoauth/
+- ~/Library/LaunchAgents/com.barkure.csu-autoauth.plist
+```
+
+- 卸载服务：
+```bash
+sh shell/macos/uninstall-launchd.sh
+```
+
+- 脚本默认日志文件：
+```
+- ~/Library/Logs/csu-autoauth/csu-autoauth.log
+- ~/Library/Logs/csu-autoauth/launchd.out.log
+- ~/Library/Logs/csu-autoauth/launchd.err.log
+```
 
 ### PowerShell
 1. 克隆到本地，并复制 `powershell/csu-autoauth.ps1` 到合适位置：
