@@ -139,7 +139,7 @@ ssh root@<router-ip> apk add --allow-untrusted /tmp/csu-autoauth.apk
 - OpenWrt `24.10` 及更早版本使用 `opkg`：
 
 ```sh
-scp -O ./csu-autoauth_*.ipk root@<router-ip>:/tmp/csu-autoauth.ipk
+scp -O ./csu-autoauth-*.ipk root@<router-ip>:/tmp/csu-autoauth.ipk
 ssh root@<router-ip> opkg install /tmp/csu-autoauth.ipk
 ```
 
