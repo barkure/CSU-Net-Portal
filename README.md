@@ -110,12 +110,13 @@ notepad .\powershell\config.ps1.example
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\powershell\install-startup.ps1
 ```
-
-该命令会在 Windows Startup 文件夹中创建启动器，并自动安装：
-- `$HOME\csu-autoauth.ps1`
-- `$HOME\.config\csu-autoauth\config.ps1`
-
 ### 其他
+- 该脚本会自动创建：
+```
+- $HOME\csu-autoauth.ps1
+- $HOME\.config\csu-autoauth\config.ps1
+```
+
 - 取消自启并即刻停止：
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\powershell\uninstall-startup.ps1
