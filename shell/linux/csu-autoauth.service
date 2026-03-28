@@ -1,5 +1,6 @@
 [Unit]
 Description=CSU Network Auto Auth
+Documentation=https://github.com/barkure/CSU-Net-Portal
 After=network-online.target
 Wants=network-online.target
 
