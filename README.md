@@ -48,12 +48,12 @@ sudo systemctl enable --now csu-autoauth.service
 
 - 运行状态：
 ```bash
-systemctl status csu-autoauth.service
+sudo systemctl status csu-autoauth.service
 ```
 
 - 查看日志：
 ```bash
-journalctl -u csu-autoauth.service -f
+sudo journalctl -u csu-autoauth.service -f
 ```
 
 ## Shell (macOS)
@@ -110,6 +110,7 @@ notepad .\powershell\config.ps1.example
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\powershell\install-startup.ps1
 ```
+
 ### 其他
 - 该脚本会自动创建：
 ```
