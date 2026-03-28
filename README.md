@@ -10,7 +10,11 @@
 # INTERVAL 为自动检测间隔，单位为秒，默认为 10 秒
 ```
 
-Linux 请查看 [Shell (Linux)](https://github.com/barkure/CSU-Net-Portal#shell-linux)，macOS 请查看 [Shell (macOS)](https://github.com/barkure/CSU-Net-Portal#shell-macos)，Windows 请查看 [PowerShell](https://github.com/barkure/CSU-Net-Portal#powershell)，OpenWrt 路由器请查看 [OpenWrt](https://github.com/barkure/CSU-Net-Portal#openwrt)。
+有如下四个版本：
+- [Shell (Linux)](https://github.com/barkure/CSU-Net-Portal#shell-linux)
+- [Shell (macOS)](https://github.com/barkure/CSU-Net-Portal#shell-macos)
+- [PowerShell (Windows)](https://github.com/barkure/CSU-Net-Portal#powershell)
+- [OpenWrt](https://github.com/barkure/CSU-Net-Portal#openwrt)
 
 ### Shell (Linux)
 #### 安装
@@ -34,8 +38,7 @@ sudo systemctl enable --now csu-autoauth.service
 ```
 
 #### 其他
-
-[文件系统层次结构标准 (FHS)](https://zh.wikipedia.org/wiki/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84%E6%A0%87%E5%87%86)：
+- 脚本遵循 [文件系统层次结构标准 (FHS)](https://zh.wikipedia.org/wiki/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84%E6%A0%87%E5%87%86)：
 ```
 - /usr/local/bin/csu-autoauth
 - /usr/local/etc/csu-autoauth/config.conf
@@ -43,9 +46,13 @@ sudo systemctl enable --now csu-autoauth.service
 - /etc/systemd/system/csu-autoauth.service
 ```
 
-查看运行状态和日志：
+- 运行状态：
 ```bash
 systemctl status csu-autoauth.service
+```
+
+- 查看日志：
+```bash
 journalctl -u csu-autoauth.service -f
 ```
 
