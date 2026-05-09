@@ -3,21 +3,15 @@
 set -eu
 
 BASE_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-HOME_DIR="${HOME:?HOME is not set}"
-BIN_DIR="$HOME_DIR/.local/bin"
-CONFIG_DIR="$HOME_DIR/.config/csu-autoauth"
-LOG_DIR="$HOME_DIR/Library/Logs/csu-autoauth"
+# shellcheck disable=SC1091
+. "$BASE_DIR/../common/install-common.sh"
+
 LAUNCH_AGENTS_DIR="$HOME_DIR/Library/LaunchAgents"
-SCRIPT_DST="$BIN_DIR/csu-autoauth"
-CONFIG_DST="$CONFIG_DIR/config.conf"
 PLIST_DST="$LAUNCH_AGENTS_DIR/com.barkure.csu-autoauth.plist"
 
-mkdir -p "$BIN_DIR" "$CONFIG_DIR" "$LOG_DIR" "$LAUNCH_AGENTS_DIR"
-install -m 755 "$BASE_DIR/csu-autoauth.sh" "$SCRIPT_DST"
-
-if [ ! -f "$CONFIG_DST" ]; then
-    install -m 644 "$BASE_DIR/config.conf.example" "$CONFIG_DST"
-fi
+collect_config
+write_config "$BASE_DIR/../common/csu-autoauth.sh"
+mkdir -p "$LAUNCH_AGENTS_DIR"
 
 cat > "$PLIST_DST" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -27,11 +21,17 @@ cat > "$PLIST_DST" <<EOF
     <key>Label</key>
     <string>com.barkure.csu-autoauth</string>
 
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>LOG_TO_STDOUT</key>
+        <string>0</string>
+    </dict>
+
     <key>ProgramArguments</key>
     <array>
         <string>/bin/sh</string>
         <string>-lc</string>
-        <string>$SCRIPT_DST</string>
+        <string>exec "$SCRIPT_DST"</string>
     </array>
 
     <key>RunAtLoad</key>
@@ -41,10 +41,10 @@ cat > "$PLIST_DST" <<EOF
     <true/>
 
     <key>StandardOutPath</key>
-    <string>$LOG_DIR/launchd.out.log</string>
+    <string>$LOG_FILE</string>
 
     <key>StandardErrorPath</key>
-    <string>$LOG_DIR/launchd.err.log</string>
+    <string>$LOG_FILE</string>
 </dict>
 </plist>
 EOF
@@ -55,3 +55,4 @@ launchctl load "$PLIST_DST"
 printf '%s\n' "Installed script: $SCRIPT_DST"
 printf '%s\n' "Installed config: $CONFIG_DST"
 printf '%s\n' "Installed plist: $PLIST_DST"
+printf '%s\n' "Log file: $LOG_FILE"

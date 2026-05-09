@@ -6,9 +6,9 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/csu-autoauth
-Restart=on-failure
-RestartSec=15
+ExecStart=%h/.local/bin/csu-autoauth
+Restart=always
+RestartSec=5
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
