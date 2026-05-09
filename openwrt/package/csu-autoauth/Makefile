@@ -8,15 +8,16 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=csu-autoauth
-PKG_VERSION:=1.0.3
+PKG_VERSION:=1.0.4
 PKG_RELEASE:=1
 
 PKG_SOURCE:=CSU-Net-Portal-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/barkure/CSU-Net-Portal/tar.gz/refs/tags/v$(PKG_VERSION)?
-PKG_HASH:=baad9ddbf9f0d59db1bddcb240e09bcffdf2e13c256deec13f97d37a4b371bb1
+PKG_HASH:=e4706f946c6e0368ab0f622da0d8eea8dadd3aedfb00d48f56e80c375b82b822
 PKG_BUILD_DIR:=$(BUILD_DIR)/CSU-Net-Portal-$(PKG_VERSION)
 
 PKG_LICENSE:=MIT
+PKG_LICENSE_FILES:=LICENSE
 PKG_ARCH:=all
 
 include $(INCLUDE_DIR)/package.mk
