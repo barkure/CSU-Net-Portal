@@ -157,8 +157,3 @@ uci commit csu-autoauth
 
 如果仓库软件源可用，包管理器会自动拉取 `curl`；如果软件源不可用，需要先确保路由器能访问对应软件源，或提前准备好离线的依赖包一并安装。
 
-OpenWrt 包版本维护约定：
-
-- 程序逻辑变化 -> bump `PKG_VERSION`, reset `PKG_RELEASE` to `1`
-- 仅打包变化 -> bump `PKG_RELEASE` only
-- 仅文档变化 -> no version bump
