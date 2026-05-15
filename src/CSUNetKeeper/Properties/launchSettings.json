@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "CSU Net Keeper (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "CSU Net Keeper (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
