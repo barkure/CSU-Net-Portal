@@ -103,9 +103,13 @@ jobs:
         run: |
           set -eu
           mkdir -p artifacts
-          release_version="$(git rev-parse --short HEAD)"
-          find "$SDK_DIR/bin/packages" -type f -name 'csu-autoauth*.apk' | while read -r pkg; do
-            renamed="csu-autoauth-${release_version}-${TARGET}-${SUBTARGET}.apk"
+          find "$SDK_DIR/bin/packages" -type f -name "csu-autoauth*.${PACKAGE_FORMAT}" | while read -r pkg; do
+            arch_name="$(printf '%s\n' "$pkg" | sed -n 's#.*bin/packages/\([^/]*\)/.*#\1#p')"
+            if [ -z "$arch_name" ]; then
+              echo "Unable to derive package architecture from $pkg"
+              exit 1
+            fi
+            renamed="csu-autoauth-${TARGET}-${SUBTARGET}-${arch_name}.${PACKAGE_FORMAT}"
             cp "$pkg" "artifacts/$renamed"
             printf '%s -> %s\n' "$pkg" "artifacts/$renamed"
           done
@@ -242,20 +246,16 @@ jobs:
         run: |
           set -eu
           mkdir -p artifacts
-          release_version="${GITHUB_REF_NAME#v}"
-          if [ "$PACKAGE_FORMAT" = "apk" ]; then
-            find "$SDK_DIR/bin/packages" -type f -name 'csu-autoauth*.apk' | while read -r pkg; do
-              renamed="csu-autoauth-${release_version}-${TARGET}-${SUBTARGET}.apk"
-              cp "$pkg" "artifacts/$renamed"
-              printf '%s -> %s\n' "$pkg" "artifacts/$renamed"
-            done
-          else
-            find "$SDK_DIR/bin/packages" -type f -name 'csu-autoauth*.ipk' | while read -r pkg; do
-              renamed="csu-autoauth-${release_version}-${TARGET}-${SUBTARGET}.ipk"
-              cp "$pkg" "artifacts/$renamed"
-              printf '%s -> %s\n' "$pkg" "artifacts/$renamed"
-            done
-          fi
+          find "$SDK_DIR/bin/packages" -type f -name "csu-autoauth*.${PACKAGE_FORMAT}" | while read -r pkg; do
+            arch_name="$(printf '%s\n' "$pkg" | sed -n 's#.*bin/packages/\([^/]*\)/.*#\1#p')"
+            if [ -z "$arch_name" ]; then
+              echo "Unable to derive package architecture from $pkg"
+              exit 1
+            fi
+            renamed="csu-autoauth-${TARGET}-${SUBTARGET}-${arch_name}.${PACKAGE_FORMAT}"
+            cp "$pkg" "artifacts/$renamed"
+            printf '%s -> %s\n' "$pkg" "artifacts/$renamed"
+          done
           ls -l artifacts
 
       - name: Upload artifacts

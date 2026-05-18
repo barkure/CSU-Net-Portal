@@ -126,22 +126,11 @@ powershell -ExecutionPolicy Bypass -File .\powershell\uninstall-startup.ps1
 - 默认日志文件：`$env:LOCALAPPDATA\csu-autoauth\csu-autoauth.log`
 
 ## OpenWrt
-请在仓库的 Release 页面下载与你设备架构和 OpenWrt 版本匹配的安装包，再上传到路由器安装。
 
-OpenWrt 目前使用新的包管理器 `apk` 替换了 `opkg`，请使用对应的包管理器进行安装：
-
-- OpenWrt `25.12+` 使用 `apk`：
+使用此脚本可以检测并下载安装系统对应的软件包：
 
 ```sh
-scp -O ./csu-autoauth-*.apk root@<router-ip>:/tmp/csu-autoauth.apk
-ssh root@<router-ip> apk add --allow-untrusted /tmp/csu-autoauth.apk
-```
-
-- OpenWrt `24.10` 及更早版本使用 `opkg`：
-
-```sh
-scp -O ./csu-autoauth-*.ipk root@<router-ip>:/tmp/csu-autoauth.ipk
-ssh root@<router-ip> opkg install /tmp/csu-autoauth.ipk
+sh <(curl -fsSL https://raw.githubusercontent.com/barkure/CSU-Net-Portal/main/openwrt/install.sh)
 ```
 
 安装完成后，使用 UCI 配置账号密码：
@@ -155,5 +144,6 @@ uci commit csu-autoauth
 /etc/init.d/csu-autoauth restart
 ```
 
-如果仓库软件源可用，包管理器会自动拉取 `curl`；如果软件源不可用，需要先确保路由器能访问对应软件源，或提前准备好离线的依赖包一并安装。
-
+注意：
+- 这条命令依赖系统里已有 `curl`、`ubus`、`jsonfilter`；
+- 如果包依赖无法自动补齐，需要确保路由器当前官方软件源可用。
