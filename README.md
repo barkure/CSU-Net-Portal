@@ -40,7 +40,7 @@ curl -fsSL https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@main/shell/uninsta
 ## PowerShell (Windows)
 ### 一键安装
 ```powershell
-irm https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@main/powershell/install.ps1 | iex
+irm https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@cefc272/powershell/install.ps1 | iex
 ```
 
 ### 其他
