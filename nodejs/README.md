@@ -41,3 +41,27 @@ NPM 仓库地址
 ```
 https://www.npmjs.com/package/csu-autoauth
 ```
+
+### GitHub Actions 自动发布到 npm
+
+仓库已经提供 `.github/workflows/npm-publish.yml`，发布方式如下：
+
+```sh
+# 先更新 nodejs/package.json 里的 version
+git tag v1.0.1
+git push origin main --tags
+```
+
+或者使用带前缀的 tag：
+
+```sh
+git tag nodejs-v1.0.1
+git push origin main --tags
+```
+
+工作流会自动：
+
+- 在 `nodejs/` 目录安装依赖
+- 校验 tag 版本和 `package.json` 的 `version` 一致
+- 执行 `npm pack --dry-run`
+- 发布到 npm
