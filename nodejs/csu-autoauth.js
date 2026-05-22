@@ -14,17 +14,17 @@ const logToStdout = process.env.LOG_TO_STDOUT !== "0";
 const defaultConfig = {
   USERNAME: "",
   PASSWORD: "",
-  TYPE: "1",
+  TYPE: 1,
   INTERVAL: 10
 };
 
 const config = loadConfig();
 
 const netSuffixMap = {
-  "1": "cmccn",
-  "2": "unicomn",
-  "3": "telecomn",
-  "4": ""
+  1: "cmccn",
+  2: "unicomn",
+  3: "telecomn",
+  4: ""
 };
 
 const color = {
@@ -128,6 +128,10 @@ function validateConfig() {
     throw new Error(`Missing USERNAME or PASSWORD in ${envFile}`);
   }
 
+  if (!Object.prototype.hasOwnProperty.call(netSuffixMap, config.TYPE)) {
+    throw new Error(`TYPE must be one of 1, 2, 3, 4 in ${envFile}`);
+  }
+
   if (!Number.isInteger(config.INTERVAL) || config.INTERVAL <= 0) {
     throw new Error(`INTERVAL must be a positive integer in ${envFile}`);
   }
@@ -169,12 +173,13 @@ function parseEnvFile(filePath) {
 }
 
 function normalizeConfig(rawConfig) {
+  const type = Number.parseInt(String(rawConfig.TYPE ?? defaultConfig.TYPE), 10);
   const interval = Number.parseInt(String(rawConfig.INTERVAL ?? defaultConfig.INTERVAL), 10);
 
   return {
     USERNAME: String(rawConfig.USERNAME ?? "").trim(),
     PASSWORD: String(rawConfig.PASSWORD ?? ""),
-    TYPE: String(rawConfig.TYPE ?? defaultConfig.TYPE).trim() || defaultConfig.TYPE,
+    TYPE: type,
     INTERVAL: interval
   };
 }
@@ -200,7 +205,7 @@ function saveConfig() {
   const content = [
     `USERNAME=${escapeEnvValue(config.USERNAME)}`,
     `PASSWORD=${escapeEnvValue(config.PASSWORD)}`,
-    `TYPE=${escapeEnvValue(config.TYPE)}`,
+    `TYPE=${config.TYPE}`,
     `INTERVAL=${config.INTERVAL}`
   ].join("\n") + "\n";
 
@@ -266,13 +271,15 @@ async function ensureConfig() {
   }
 
   if (!envExists || !Object.prototype.hasOwnProperty.call(netSuffixMap, config.TYPE)) {
-    config.TYPE = "";
+    config.TYPE = Number.NaN;
   }
 
   while (!Object.prototype.hasOwnProperty.call(netSuffixMap, config.TYPE)) {
-    config.TYPE = await ask("Network type (1=CMCC, 2=Unicom, 3=Telecom, 4=Campus) [Default 1]: ");
-    if (!config.TYPE) {
+    const type = await ask("Network type (1=CMCC, 2=Unicom, 3=Telecom, 4=Campus) [Default 1]: ");
+    if (!type) {
       config.TYPE = defaultConfig.TYPE;
+    } else {
+      config.TYPE = Number.parseInt(type, 10);
     }
   }
 
@@ -290,7 +297,7 @@ async function ensureConfig() {
 }
 
 function getUserAccount() {
-  const suffix = netSuffixMap[String(config.TYPE)] ?? "";
+  const suffix = netSuffixMap[config.TYPE] ?? "";
   return suffix ? `${config.USERNAME}@${suffix}` : config.USERNAME;
 }
 
