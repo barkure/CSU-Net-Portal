@@ -1,1 +1,5 @@
 .DS_Store
+node_modules/
+nodejs/node_modules/
+nodejs/.env
+nodejs/log/
