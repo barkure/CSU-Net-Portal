@@ -1,14 +1,22 @@
 {
   "name": "csu-autoauth",
-  "version": "1.0.2",
+  "version": "26.5.22",
   "private": false,
-  "description": "Node.js version of CSU-Net-Portal auto authentication script",
-  "keywords": ["CSU", "Network", "Login"],
-  "author": {"name": "steamfinder", "email": "steamfinder@foxmail.com"},
+  "description": "Central South University network auto authentication CLI",
+  "keywords": [
+    "csu",
+    "campus-network",
+    "cli",
+    "autoauth"
+  ],
+  "author": {
+    "name": "steamfinder",
+    "email": "steamfinder@foxmail.com"
+  },
   "license": "MIT",
   "main": "index.js",
   "bin": {
-    "csu-autoauth": "bin/csu-autoauth.js"
+    "csu-autoauth": "index.js"
   },
   "repository": {
     "type": "git",
@@ -20,15 +28,14 @@
     "url": "https://github.com/barkure/CSU-Net-Portal/issues"
   },
   "files": [
-    "bin",
     "index.js",
-    "README.md",
-    ".env.example"
+    "README.md"
   ],
   "scripts": {
     "start": "node index.js"
   },
   "engines": {
     "node": ">=18"
-  }
+  },
+  "packageManager": "pnpm@11.2.2"
 }

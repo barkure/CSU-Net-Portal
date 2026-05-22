@@ -5,10 +5,10 @@
 配置项分别是学号、密码、运营商、检测时间间隔（可选）。
 
 有如下四个版本：
-- [Shell (macOS / Linux)](https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file#shell-macos--linux)
-- [PowerShell (Windows)](https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file#powershell)
-- [OpenWrt](https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file#openwrt)
-- [Node.js](https://github.com/barkure/CSU-Net-Portal?tab=readme-ov-file#nodejs)
+- [Shell (macOS / Linux)](https://github.com/barkure/CSU-Net-Portal#shell-macos--linux)
+- [PowerShell (Windows)](https://github.com/barkure/CSU-Net-Portal#powershell)
+- [OpenWrt](https://github.com/barkure/CSU-Net-Portal#openwrt)
+- [Node.js CLI](https://github.com/barkure/CSU-Net-Portal#nodejs-cli)
 
 ## Shell (macOS / Linux)
 ### 一键安装
@@ -83,76 +83,61 @@ uci commit csu-autoauth
 
 ### 其他
 
-- 这条命令依赖系统里已有 `curl`；
+- 这条命令依赖系统里已有 `curl`
 - 卸载命令：
 ```sh
 curl -fsSL https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@main/openwrt/uninstall.sh | sh
 ```
 
-## Node.js
-### 说明
+## Node.js CLI
+### 安装与运行
 
-适用于安装了 Node.js 18 及以上版本的环境。Node.js 版本可以在各个操作系统的设备上运行，实现校园网无感登录。
+推荐直接使用 npm 包，不需要克隆仓库：
 
-首次运行会自动检查 `nodejs/.env`。如果没有配置学号和密码，将会进行引导，并把结果保存到 `.env`。
+建议使用 Node.js 18 及以上版本。
 
-### 一键安装
-使用包管理器安装：
-```sh
-npm install -g csu-autoauth
-```
-
-运行：
-```sh
-csu-autoauth
-```
-
-也可以不全局安装，直接临时运行：
 ```sh
 npx csu-autoauth
 ```
 
-也可以先手动复制示例文件再编辑：
-```sh
-cp nodejs/.env.example nodejs/.env
-```
-
-### 其他
-
-默认会使用这些路径，也支持通过环境变量覆盖：
-```
-- ENV_FILE: ./nodejs/.env
-- DATA_DIR: ./nodejs/log
-- LOG_FILE: ./nodejs/log/csu-autoauth.log
-- LOG_TO_STDOUT: 1
-- CSU_USERNAME / CSU_PASSWORD / CSU_TYPE / CSU_INTERVAL
-```
-
-NPM 仓库地址
-```
-https://www.npmjs.com/package/csu-autoauth
-```
-
-### GitHub Actions 自动发布到 npm
-
-仓库已经提供 `.github/workflows/npm-publish.yml`，发布方式如下：
+或全局安装后运行：
 
 ```sh
-# 先更新 nodejs/package.json 里的 version
-git tag v1.0.1
-git push origin main --tags
+npm install -g csu-autoauth
+csu-autoauth
 ```
 
-或者使用带前缀的 tag：
+也支持直接带参数运行：
 
 ```sh
-git tag nodejs-v1.0.1
-git push origin main --tags
+csu-autoauth -u YOUR_STUDENT_NUMBER -p YOUR_PASSWORD -t 1 -i 10
 ```
 
-工作流会自动：
+### 参数
 
-- 在 `nodejs/` 目录安装依赖
-- 校验 tag 版本和 `package.json` 的 `version` 一致
-- 执行 `npm pack --dry-run`
-- 发布到 npm
+```text
+-u, --username <value>   学号
+-p, --password <value>   密码
+-t, --type <value>       运营商，支持 1/2/3/4 或 cmcc/unicom/telecom/campus
+-i, --interval <value>   检查间隔，单位秒，默认 10
+-h, --help               查看帮助
+--config <path>          自定义配置文件路径
+--log-file <path>        自定义日志文件路径
+--no-save                本次运行不保存配置
+--reset                  清除已保存配置并重新引导
+```
+
+### 配置与日志路径
+
+- macOS / Linux 默认配置文件：`~/.config/csu-autoauth/config.env`
+- macOS / Linux 默认日志文件：`~/.local/share/csu-autoauth/csu-autoauth.log`
+- Windows 默认配置文件：`%APPDATA%\csu-autoauth\config.env`
+- Windows 默认日志文件：`%LOCALAPPDATA%\csu-autoauth\csu-autoauth.log`
+
+首次运行如果缺少必要参数，会进入交互式配置，并把结果保存到配置文件。
+
+如需重新配置：
+
+```sh
+csu-autoauth --reset
+```

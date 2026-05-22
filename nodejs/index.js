@@ -2,31 +2,12 @@
 "use strict";
 
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const readline = require("readline");
+const { spawnSync } = require("child_process");
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
-const envFile = process.env.ENV_FILE || path.join(__dirname, ".env");
-const dataDir = process.env.DATA_DIR || path.join(__dirname, "log");
-const logFile = process.env.LOG_FILE || path.join(dataDir, "csu-autoauth.log");
-const logToStdout = process.env.LOG_TO_STDOUT !== "0";
-
-const defaultConfig = {
-  USERNAME: "",
-  PASSWORD: "",
-  TYPE: 1,
-  INTERVAL: 10
-};
-
-const config = loadConfig();
-
-const netSuffixMap = {
-  1: "cmccn",
-  2: "unicomn",
-  3: "telecomn",
-  4: ""
-};
 
 const color = {
   reset: "\x1b[0m",
@@ -38,7 +19,148 @@ const color = {
   cyan: "\x1b[36m"
 };
 
+const defaultConfig = {
+  USERNAME: "",
+  PASSWORD: "",
+  TYPE: "",
+  INTERVAL: 10
+};
+
+const networkAliases = new Map([
+  ["1", "1"],
+  ["cmcc", "1"],
+  ["cmccn", "1"],
+  ["mobile", "1"],
+  ["2", "2"],
+  ["unicom", "2"],
+  ["unicomn", "2"],
+  ["3", "3"],
+  ["telecom", "3"],
+  ["telecomn", "3"],
+  ["4", "4"],
+  ["campus", "4"],
+  ["campusnet", "4"],
+  ["direct", "4"]
+]);
+
+const netSuffixMap = {
+  1: "cmccn",
+  2: "unicomn",
+  3: "telecomn",
+  4: ""
+};
+
 let lastHeartbeatWidth = 0;
+
+function getDefaultPaths() {
+  if (process.platform === "win32") {
+    const configRoot = process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming");
+    const dataRoot = process.env.LOCALAPPDATA || configRoot;
+    return {
+      configFile: path.join(configRoot, "csu-autoauth", "config.env"),
+      dataDir: path.join(dataRoot, "csu-autoauth"),
+      logFile: path.join(dataRoot, "csu-autoauth", "csu-autoauth.log")
+    };
+  }
+
+  const configRoot = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
+  const dataRoot = process.env.XDG_DATA_HOME || path.join(os.homedir(), ".local", "share");
+  return {
+    configFile: path.join(configRoot, "csu-autoauth", "config.env"),
+    dataDir: path.join(dataRoot, "csu-autoauth"),
+    logFile: path.join(dataRoot, "csu-autoauth", "csu-autoauth.log")
+  };
+}
+
+function printHelp() {
+  console.log(`csu-autoauth
+
+Usage:
+  csu-autoauth
+  csu-autoauth --username <value> --password <value> --type <value> [--interval <seconds>]
+  csu-autoauth -u <value> -p <value> -t <value> [-i <seconds>]
+
+Options:
+  -u, --username <value>   Student number
+  -p, --password <value>   Password
+  -t, --type <value>       1/2/3/4 or cmcc/unicom/telecom/campus
+  -i, --interval <value>   Check interval in seconds, default 10
+  -h, --help               Show this help
+  --config <path>          Custom config file path
+  --log-file <path>        Custom log file path
+  --no-save                Do not persist config changes
+  --reset                  Clear saved config and run setup again
+`);
+}
+
+function parseArgs(argv) {
+  const parsed = {
+    USERNAME: undefined,
+    PASSWORD: undefined,
+    TYPE: undefined,
+    INTERVAL: undefined,
+    configFile: undefined,
+    logFile: undefined,
+    noSave: false,
+    reset: false,
+    help: false
+  };
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+
+    if (arg === "--help" || arg === "-h") {
+      parsed.help = true;
+      continue;
+    }
+
+    if (arg === "--no-save") {
+      parsed.noSave = true;
+      continue;
+    }
+
+    if (arg === "--reset") {
+      parsed.reset = true;
+      continue;
+    }
+
+    const next = argv[index + 1];
+    if (next === undefined) {
+      throw new Error(`Missing value for ${arg}`);
+    }
+
+    switch (arg) {
+      case "-u":
+      case "--username":
+        parsed.USERNAME = next;
+        break;
+      case "-p":
+      case "--password":
+        parsed.PASSWORD = next;
+        break;
+      case "-t":
+      case "--type":
+        parsed.TYPE = next;
+        break;
+      case "-i":
+      case "--interval":
+        parsed.INTERVAL = next;
+        break;
+      case "--config":
+        parsed.configFile = next;
+        break;
+      case "--log-file":
+        parsed.logFile = next;
+        break;
+      default:
+        throw new Error(`Unknown argument: ${arg}`);
+    }
+
+    index += 1;
+  }
+
+  return parsed;
+}
 
 function timestamp() {
   const now = new Date();
@@ -50,21 +172,8 @@ function timestamp() {
   ].join("-") + " " + [pad(now.getHours()), pad(now.getMinutes()), pad(now.getSeconds())].join(":");
 }
 
-function initLogFile() {
-  fs.mkdirSync(dataDir, { recursive: true });
-  if (!fs.existsSync(logFile)) {
-    fs.writeFileSync(logFile, "");
-  }
-}
-
-function log(message) {
-  const currentTimestamp = timestamp();
-  const line = `[${currentTimestamp}] ${message}`;
-  if (logToStdout) {
-    clearHeartbeat();
-    console.log(styleLogLine(currentTimestamp, message));
-  }
-  fs.appendFileSync(logFile, `${line}\n`, "utf8");
+function stripAnsi(text) {
+  return text.replace(/\x1b\[[0-9;]*m/g, "");
 }
 
 function styleLogLine(currentTimestamp, message) {
@@ -97,7 +206,7 @@ function styleLogLine(currentTimestamp, message) {
   return `${styledTimestamp} ${message}`;
 }
 
-function clearHeartbeat() {
+function clearHeartbeat(logToStdout) {
   if (!logToStdout || !process.stdout.isTTY || lastHeartbeatWidth === 0) {
     return;
   }
@@ -106,7 +215,7 @@ function clearHeartbeat() {
   lastHeartbeatWidth = 0;
 }
 
-function showHeartbeat(status) {
+function showHeartbeat(status, interval, logToStdout) {
   if (!logToStdout || !process.stdout.isTTY) {
     return;
   }
@@ -118,24 +227,10 @@ function showHeartbeat(status) {
   const line =
     `${color.dim}[${currentTimestamp}]${color.reset} ` +
     `${statusColor}${statusText}${color.reset} ` +
-    `${color.dim}(next check in ${config.INTERVAL}s)${color.reset}`;
+    `${color.dim}(next check in ${interval}s)${color.reset}`;
 
-  lastHeartbeatWidth = line.replace(/\x1b\[[0-9;]*m/g, "").length;
+  lastHeartbeatWidth = stripAnsi(line).length;
   process.stdout.write(`\r${line}`);
-}
-
-function validateConfig() {
-  if (!config.USERNAME || !config.PASSWORD) {
-    throw new Error(`Missing USERNAME or PASSWORD in ${envFile}`);
-  }
-
-  if (!Object.prototype.hasOwnProperty.call(netSuffixMap, config.TYPE)) {
-    throw new Error(`TYPE must be one of 1, 2, 3, 4 in ${envFile}`);
-  }
-
-  if (!Number.isInteger(config.INTERVAL) || config.INTERVAL <= 0) {
-    throw new Error(`INTERVAL must be a positive integer in ${envFile}`);
-  }
 }
 
 function parseEnvFile(filePath) {
@@ -173,36 +268,52 @@ function parseEnvFile(filePath) {
   return result;
 }
 
-function normalizeConfig(rawConfig) {
-  const type = Number.parseInt(String(rawConfig.TYPE ?? defaultConfig.TYPE), 10);
-  const interval = Number.parseInt(String(rawConfig.INTERVAL ?? defaultConfig.INTERVAL), 10);
-
-  return {
-    USERNAME: String(rawConfig.USERNAME ?? "").trim(),
-    PASSWORD: String(rawConfig.PASSWORD ?? ""),
-    TYPE: type,
-    INTERVAL: interval
-  };
-}
-
-function loadConfig() {
-  const fileConfig = parseEnvFile(envFile);
-  return normalizeConfig({
-    ...defaultConfig,
-    ...fileConfig,
-    USERNAME: process.env.CSU_USERNAME ?? fileConfig.USERNAME ?? defaultConfig.USERNAME,
-    PASSWORD: process.env.CSU_PASSWORD ?? fileConfig.PASSWORD ?? defaultConfig.PASSWORD,
-    TYPE: process.env.CSU_TYPE ?? fileConfig.TYPE ?? defaultConfig.TYPE,
-    INTERVAL: process.env.CSU_INTERVAL ?? fileConfig.INTERVAL ?? defaultConfig.INTERVAL
-  });
-}
-
 function escapeEnvValue(value) {
   return `"${String(value).replace(/\\/g, "\\\\").replace(/"/g, "\\\"")}"`;
 }
 
-function saveConfig() {
-  fs.mkdirSync(path.dirname(envFile), { recursive: true });
+function normalizeType(value) {
+  if (value === undefined || value === null || value === "") {
+    return "";
+  }
+
+  const normalized = networkAliases.get(String(value).trim().toLowerCase());
+  return normalized || "";
+}
+
+function normalizeInterval(value) {
+  if (value === undefined || value === null || value === "") {
+    return Number.NaN;
+  }
+
+  return Number.parseInt(String(value), 10);
+}
+
+function normalizeConfig(rawConfig) {
+  return {
+    USERNAME: String(rawConfig.USERNAME ?? "").trim(),
+    PASSWORD: String(rawConfig.PASSWORD ?? ""),
+    TYPE: normalizeType(rawConfig.TYPE),
+    INTERVAL: normalizeInterval(rawConfig.INTERVAL)
+  };
+}
+
+function validateConfig(config, configFile) {
+  if (!config.USERNAME || !config.PASSWORD) {
+    throw new Error(`Missing USERNAME or PASSWORD in ${configFile}`);
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(netSuffixMap, config.TYPE)) {
+    throw new Error(`TYPE must be one of 1, 2, 3, 4 in ${configFile}`);
+  }
+
+  if (!Number.isInteger(config.INTERVAL) || config.INTERVAL <= 0) {
+    throw new Error(`INTERVAL must be a positive integer in ${configFile}`);
+  }
+}
+
+function saveConfig(configFile, config) {
+  fs.mkdirSync(path.dirname(configFile), { recursive: true });
   const content = [
     `USERNAME=${escapeEnvValue(config.USERNAME)}`,
     `PASSWORD=${escapeEnvValue(config.PASSWORD)}`,
@@ -210,7 +321,13 @@ function saveConfig() {
     `INTERVAL=${config.INTERVAL}`
   ].join("\n") + "\n";
 
-  fs.writeFileSync(envFile, content, "utf8");
+  fs.writeFileSync(configFile, content, "utf8");
+}
+
+function clearSavedConfig(configFile) {
+  if (fs.existsSync(configFile)) {
+    fs.rmSync(configFile, { force: true });
+  }
 }
 
 function ask(question, options = {}) {
@@ -247,62 +364,104 @@ function ask(question, options = {}) {
   });
 }
 
-async function ensureConfig() {
-  const envExists = fs.existsSync(envFile);
-  const needsSetup =
-    !config.USERNAME ||
-    !config.PASSWORD ||
-    !Object.prototype.hasOwnProperty.call(netSuffixMap, config.TYPE) ||
-    !Number.isInteger(config.INTERVAL) ||
-    config.INTERVAL <= 0;
+async function ensureConfig(state) {
+  const missingRequired =
+    !state.config.USERNAME ||
+    !state.config.PASSWORD ||
+    !Object.prototype.hasOwnProperty.call(netSuffixMap, state.config.TYPE) ||
+    !Number.isInteger(state.config.INTERVAL) ||
+    state.config.INTERVAL <= 0;
 
-  if (!needsSetup) {
+  if (!missingRequired) {
     return;
   }
 
-  console.log(`Configuration not found or incomplete: ${envFile}`);
+  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+    throw new Error("Missing required config. Run with --username --password --type, or use an interactive terminal.");
+  }
+
+  console.log(`Configuration not found or incomplete: ${state.configFile}`);
   console.log("First-time setup");
 
-  if (!config.USERNAME) {
-    config.USERNAME = await ask("Student number: ");
+  if (!state.config.USERNAME) {
+    state.config.USERNAME = await ask("Student number: ");
   }
 
-  if (!config.PASSWORD) {
-    config.PASSWORD = await ask("Password: ", { silent: true });
+  if (!state.config.PASSWORD) {
+    state.config.PASSWORD = await ask("Password: ", { silent: true });
   }
 
-  if (!envExists || !Object.prototype.hasOwnProperty.call(netSuffixMap, config.TYPE)) {
-    config.TYPE = Number.NaN;
-  }
-
-  while (!Object.prototype.hasOwnProperty.call(netSuffixMap, config.TYPE)) {
+  while (!Object.prototype.hasOwnProperty.call(netSuffixMap, state.config.TYPE)) {
     const type = await ask("Network type (1=CMCC, 2=Unicom, 3=Telecom, 4=Campus) [Default 1]: ");
-    if (!type) {
-      config.TYPE = defaultConfig.TYPE;
-    } else {
-      config.TYPE = Number.parseInt(type, 10);
-    }
+    state.config.TYPE = normalizeType(type || "1");
   }
 
-  if (!envExists) {
-    config.INTERVAL = Number.NaN;
-  }
-
-  while (!Number.isInteger(config.INTERVAL) || config.INTERVAL <= 0) {
+  while (!Number.isInteger(state.config.INTERVAL) || state.config.INTERVAL <= 0) {
     const interval = await ask("Check interval in seconds [Default 10]: ");
-    config.INTERVAL = Number.parseInt(interval || String(defaultConfig.INTERVAL), 10);
+    state.config.INTERVAL = normalizeInterval(interval || String(defaultConfig.INTERVAL));
   }
 
-  saveConfig();
-  console.log(`Saved configuration to ${envFile}`);
+  if (!state.noSave) {
+    saveConfig(state.configFile, state.config);
+    console.log(`Saved configuration to ${state.configFile}`);
+  }
 }
 
-function getUserAccount() {
+function createLogger(state) {
+  fs.mkdirSync(path.dirname(state.logFile), { recursive: true });
+  if (!fs.existsSync(state.logFile)) {
+    fs.writeFileSync(state.logFile, "");
+  }
+
+  return function log(message) {
+    const currentTimestamp = timestamp();
+    const line = `[${currentTimestamp}] ${message}`;
+    if (state.logToStdout) {
+      clearHeartbeat(state.logToStdout);
+      console.log(styleLogLine(currentTimestamp, message));
+    }
+    fs.appendFileSync(state.logFile, `${line}\n`, "utf8");
+  };
+}
+
+function getUserAccount(config) {
   const suffix = netSuffixMap[config.TYPE] ?? "";
   return suffix ? `${config.USERNAME}@${suffix}` : config.USERNAME;
 }
 
+function runCurl(args) {
+  const command = process.platform === "win32" ? "curl.exe" : "curl";
+  const result = spawnSync(command, args, {
+    encoding: "utf8"
+  });
+
+  if (result.error) {
+    return {
+      ok: false,
+      stdout: "",
+      stderr: result.error.message
+    };
+  }
+
+  return {
+    ok: result.status === 0,
+    stdout: result.stdout || "",
+    stderr: result.stderr || ""
+  };
+}
+
 async function testOnline() {
+  const curlResult = runCurl([
+    "-fsS",
+    "--max-time",
+    "5",
+    "http://captive.apple.com/hotspot-detect.html"
+  ]);
+
+  if (curlResult.ok) {
+    return curlResult.stdout.includes("Success");
+  }
+
   try {
     const response = await fetch("http://captive.apple.com/hotspot-detect.html", {
       method: "GET",
@@ -320,15 +479,40 @@ async function testOnline() {
   }
 }
 
-async function login() {
-  const userAccount = getUserAccount();
-  const url = new URL("https://10.1.1.1:802/eportal/portal/login");
-  url.searchParams.set("user_account", userAccount);
-  url.searchParams.set("user_password", config.PASSWORD);
+async function login(config, log) {
+  const userAccount = getUserAccount(config);
+  const loginUrl = "https://10.1.1.1:802/eportal/portal/login";
 
   log(`Authenticating as: ${userAccount}`);
 
+  const curlResult = runCurl([
+    "-k",
+    "-fsS",
+    "-G",
+    loginUrl,
+    "--data-urlencode",
+    `user_account=${userAccount}`,
+    "--data-urlencode",
+    `user_password=${config.PASSWORD}`
+  ]);
+
+  if (curlResult.ok) {
+    log(`Login response: ${curlResult.stdout.trim()}`);
+    return;
+  }
+
+  if (curlResult.stdout || curlResult.stderr) {
+    const curlMessage = `${curlResult.stdout}${curlResult.stderr}`.trim();
+    if (curlMessage) {
+      log(`Login response: ${curlMessage}`);
+      return;
+    }
+  }
+
   try {
+    const url = new URL(loginUrl);
+    url.searchParams.set("user_account", userAccount);
+    url.searchParams.set("user_password", config.PASSWORD);
     const response = await fetch(url, {
       method: "GET",
       signal: AbortSignal.timeout(5000)
@@ -344,12 +528,65 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function createState() {
+  const args = parseArgs(process.argv.slice(2));
+  const defaults = getDefaultPaths();
+  const configFile = path.resolve(args.configFile || process.env.CONFIG_FILE || defaults.configFile);
+  const dataDir = path.resolve(process.env.DATA_DIR || defaults.dataDir);
+  const logFile = path.resolve(args.logFile || process.env.LOG_FILE || path.join(dataDir, "csu-autoauth.log"));
+  const fileConfig = parseEnvFile(configFile);
+  const overrideConfig = {
+    USERNAME: args.USERNAME ?? process.env.CSU_USERNAME ?? defaultConfig.USERNAME,
+    PASSWORD: args.PASSWORD ?? process.env.CSU_PASSWORD ?? defaultConfig.PASSWORD,
+    TYPE: args.TYPE ?? process.env.CSU_TYPE ?? defaultConfig.TYPE,
+    INTERVAL: args.INTERVAL ?? process.env.CSU_INTERVAL ?? defaultConfig.INTERVAL
+  };
+  const config = normalizeConfig({
+    ...defaultConfig,
+    ...fileConfig,
+    USERNAME: overrideConfig.USERNAME ?? fileConfig.USERNAME ?? defaultConfig.USERNAME,
+    PASSWORD: overrideConfig.PASSWORD ?? fileConfig.PASSWORD ?? defaultConfig.PASSWORD,
+    TYPE: overrideConfig.TYPE ?? fileConfig.TYPE ?? defaultConfig.TYPE,
+    INTERVAL: overrideConfig.INTERVAL ?? fileConfig.INTERVAL ?? defaultConfig.INTERVAL
+  });
+
+  return {
+    config,
+    overrideConfig,
+    configFile,
+    logFile,
+    logToStdout: process.env.LOG_TO_STDOUT !== "0",
+    noSave: args.noSave,
+    reset: args.reset,
+    help: args.help
+  };
+}
+
 async function main() {
-  await ensureConfig();
-  validateConfig();
-  initLogFile();
-  log(`init CSU Network Portal`);
-  log(`Start monitoring network status, interval ${config.INTERVAL}s`);
+  const state = createState();
+  if (state.help) {
+    printHelp();
+    return;
+  }
+
+  if (state.reset) {
+    clearSavedConfig(state.configFile);
+    state.config = normalizeConfig({
+      ...defaultConfig,
+      ...state.overrideConfig
+    });
+  }
+
+  await ensureConfig(state);
+
+  if (!state.noSave) {
+    saveConfig(state.configFile, state.config);
+  }
+
+  validateConfig(state.config, state.configFile);
+  const log = createLogger(state);
+  log("init CSU Network Portal");
+  log(`Start monitoring network status, interval ${state.config.INTERVAL}s`);
 
   let lastStatus = "";
 
@@ -367,11 +604,11 @@ async function main() {
         lastStatus = currentStatus;
       }
       log("Triggering authentication...");
-      await login();
+      await login(state.config, log);
     }
 
-    showHeartbeat(lastStatus);
-    await sleep(config.INTERVAL * 1000);
+    showHeartbeat(lastStatus, state.config.INTERVAL, state.logToStdout);
+    await sleep(state.config.INTERVAL * 1000);
   }
 }
 

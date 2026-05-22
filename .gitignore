@@ -1,5 +1,7 @@
 .DS_Store
-node_modules/
-nodejs/node_modules/
-nodejs/.env
-nodejs/log/
+node_modules/.env
+log/
+*.tgz
+.npm-cache/
+.tmp-install/
+.tmp-home/

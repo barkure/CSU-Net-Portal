@@ -1,10 +1,9 @@
-name: Publish Node.js Package
+name: Publish npm package
 
 on:
   push:
     tags:
       - "v*"
-      - "nodejs-v*"
   workflow_dispatch:
 
 permissions:
@@ -12,48 +11,42 @@ permissions:
   id-token: write
 
 jobs:
-  publish-npm:
+  publish:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: nodejs
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
-          cache: pnpm
-          cache-dependency-path: nodejs/pnpm-lock.yaml
-          registry-url: https://registry.npmjs.org/
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
 
       - name: Validate package version matches git tag
         shell: bash
         run: |
           PACKAGE_VERSION="$(node -p "require('./package.json').version")"
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-            TAG_VERSION="${GITHUB_REF_NAME#nodejs-v}"
-            TAG_VERSION="${TAG_VERSION#v}"
+            TAG_VERSION="${GITHUB_REF_NAME#v}"
             if [ "${PACKAGE_VERSION}" != "${TAG_VERSION}" ]; then
               echo "package.json version (${PACKAGE_VERSION}) does not match tag (${GITHUB_REF_NAME})."
               exit 1
             fi
           fi
 
-      - name: Verify published package contents
+      - name: Validate package metadata
         run: npm pack --dry-run
+
+      - name: Check CLI syntax
+        run: node --check index.js
+
+      - name: Smoke test CLI help
+        run: node bin/csu-autoauth.js -h
 
       - name: Publish to npm
         run: npm publish --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
