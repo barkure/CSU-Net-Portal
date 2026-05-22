@@ -1,33 +1,59 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
-
-name: Node.js Package
+name: Publish Node.js Package
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - "v*"
+      - "nodejs-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm ci
-      - run: npm test
-
   publish-npm:
-    needs: build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nodejs
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: pnpm
+          cache-dependency-path: nodejs/pnpm-lock.yaml
           registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm publish
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate package version matches git tag
+        shell: bash
+        run: |
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            TAG_VERSION="${GITHUB_REF_NAME#nodejs-v}"
+            TAG_VERSION="${TAG_VERSION#v}"
+            if [ "${PACKAGE_VERSION}" != "${TAG_VERSION}" ]; then
+              echo "package.json version (${PACKAGE_VERSION}) does not match tag (${GITHUB_REF_NAME})."
+              exit 1
+            fi
+          fi
+
+      - name: Verify published package contents
+        run: npm pack --dry-run
+
+      - name: Publish to npm
+        run: npm publish --provenance
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
