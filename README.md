@@ -97,6 +97,11 @@ curl -fsSL https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@main/openwrt/unins
 首次运行会自动检查 `nodejs/.env`。如果没有配置学号和密码，将会进行引导，并把结果保存到 `.env`。
 
 ### 一键安装
+使用包管理器安装：
+```sh
+npm install csu-net-portal
+```
+
 运行：
 ```sh
 cd nodejs
@@ -118,4 +123,9 @@ cp nodejs/.env.example nodejs/.env
 - LOG_FILE: ./nodejs/log/csu-autoauth.log
 - LOG_TO_STDOUT: 1
 - CSU_USERNAME / CSU_PASSWORD / CSU_TYPE / CSU_INTERVAL
+```
+
+NPM 仓库地址
+```
+https://www.npmjs.com/package/csu-net-portal
 ```
