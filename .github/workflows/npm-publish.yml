@@ -46,7 +46,7 @@ jobs:
         run: node --check index.js
 
       - name: Smoke test CLI help
-        run: node bin/csu-autoauth.js -h
+        run: node index.js -h
 
       - name: Publish to npm
         run: npm publish --provenance
