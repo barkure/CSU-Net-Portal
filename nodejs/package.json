@@ -1,11 +1,11 @@
 {
   "name": "csu-net-portal-nodejs",
   "version": "1.0.0",
-  "private": true,
+  "private": false,
   "description": "Node.js version of CSU-Net-Portal auto authentication script",
-  "main": "csu-autoauth.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node csu-autoauth.js"
+    "start": "node index.js"
   },
   "engines": {
     "node": ">=18"
