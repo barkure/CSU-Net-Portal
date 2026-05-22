@@ -7,7 +7,18 @@
   "author": {"name": "steamfinder", "email": "steamfinder@foxmail.com"},
   "license": "MIT",
   "main": "index.js",
-  "bin": "bin/csu-autoauth.js",
+  "bin": {
+    "csu-autoauth": "bin/csu-autoauth.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/barkure/CSU-Net-Portal.git",
+    "directory": "nodejs"
+  },
+  "homepage": "https://github.com/barkure/CSU-Net-Portal/tree/main/nodejs",
+  "bugs": {
+    "url": "https://github.com/barkure/CSU-Net-Portal/issues"
+  },
   "files": [
     "bin",
     "index.js",
