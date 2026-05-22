@@ -8,14 +8,17 @@
 ### 一键安装
 使用包管理器安装：
 ```sh
-npm install csu-net-portal
+npm install -g csu-autoauth
 ```
 
 运行：
 ```sh
-cd nodejs
-pnpm install
-pnpm start
+csu-autoauth
+```
+
+也可以不全局安装，直接临时运行：
+```sh
+npx csu-autoauth
 ```
 
 也可以先手动复制示例文件再编辑：
@@ -36,5 +39,5 @@ cp nodejs/.env.example nodejs/.env
 
 NPM 仓库地址
 ```
-https://www.npmjs.com/package/csu-net-portal
+https://www.npmjs.com/package/csu-autoauth
 ```

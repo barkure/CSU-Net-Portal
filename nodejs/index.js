@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 "use strict";
 
 const fs = require("fs");
@@ -374,7 +375,20 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error.message);
-  process.exit(1);
-});
+async function run() {
+  try {
+    await main();
+  } catch (error) {
+    console.error(error.message);
+    process.exit(1);
+  }
+}
+
+if (require.main === module) {
+  run();
+}
+
+module.exports = {
+  main,
+  run
+};
