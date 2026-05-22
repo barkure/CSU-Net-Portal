@@ -1,11 +1,19 @@
 {
-  "name": "csu-net-portal",
-  "version": "1.0.0",
+  "name": "csu-autoauth",
+  "version": "1.0.1",
   "private": false,
   "description": "Node.js version of CSU-Net-Portal auto authentication script",
   "keywords": ["CSU", "Network", "Login"],
   "author": {"name": "steamfinder", "email": "steamfinder@foxmail.com"},
+  "license": "MIT",
   "main": "index.js",
+  "bin": "bin/csu-autoauth.js",
+  "files": [
+    "bin",
+    "index.js",
+    "README.md",
+    ".env.example"
+  ],
   "scripts": {
     "start": "node index.js"
   },
