@@ -1,5 +1,5 @@
 {
-  "name": "csu-net-portal-nodejs",
+  "name": "csu-net-portal",
   "version": "1.0.0",
   "private": false,
   "description": "Node.js version of CSU-Net-Portal auto authentication script",
