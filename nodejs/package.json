@@ -5,6 +5,7 @@
   "description": "Node.js version of CSU-Net-Portal auto authentication script",
   "keywords": ["CSU", "Network", "Login"],
   "author": {"name": "steamfinder", "email": "steamfinder@foxmail.com"},
+  "license": "MIT",
   "main": "index.js",
   "bin": "bin/csu-autoauth.js",
   "files": [
