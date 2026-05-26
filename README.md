@@ -127,9 +127,10 @@ csu-autoauth -u YOUR_STUDENT_NUMBER -p YOUR_PASSWORD -t 1 -i 10
 
 ### 配置与日志路径
 
-- macOS / Linux：
-    - `~/.config/csu-autoauth/config.env`
-    - `~/.local/share/csu-autoauth/csu-autoauth.log`
-- Windows：
-    - `%APPDATA%\csu-autoauth\config.env`
-    - `%LOCALAPPDATA%\csu-autoauth\csu-autoauth.log`
+macOS / Linux：
+- `~/.config/csu-autoauth/config.env`
+- `~/.local/share/csu-autoauth/csu-autoauth.log`
+
+Windows：
+- `%APPDATA%\csu-autoauth\config.env`
+- `%LOCALAPPDATA%\csu-autoauth\csu-autoauth.log`
