@@ -92,9 +92,7 @@ curl -fsSL https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@main/openwrt/unins
 ## Node.js CLI
 ### 安装与运行
 
-推荐直接使用 npm 包，不需要克隆仓库：
-
-建议使用 Node.js 18 及以上版本。
+运行：
 
 ```sh
 npx csu-autoauth
@@ -129,15 +127,9 @@ csu-autoauth -u YOUR_STUDENT_NUMBER -p YOUR_PASSWORD -t 1 -i 10
 
 ### 配置与日志路径
 
-- macOS / Linux 默认配置文件：`~/.config/csu-autoauth/config.env`
-- macOS / Linux 默认日志文件：`~/.local/share/csu-autoauth/csu-autoauth.log`
-- Windows 默认配置文件：`%APPDATA%\csu-autoauth\config.env`
-- Windows 默认日志文件：`%LOCALAPPDATA%\csu-autoauth\csu-autoauth.log`
-
-首次运行如果缺少必要参数，会进入交互式配置，并把结果保存到配置文件。
-
-如需重新配置：
-
-```sh
-csu-autoauth --reset
-```
+- macOS / Linux：
+    - `~/.config/csu-autoauth/config.env`
+    - `~/.local/share/csu-autoauth/csu-autoauth.log`
+- Windows：
+    - `%APPDATA%\csu-autoauth\config.env`
+    - `%LOCALAPPDATA%\csu-autoauth\csu-autoauth.log`
