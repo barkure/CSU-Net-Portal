@@ -1,6 +1,6 @@
 {
   "name": "csu-autoauth",
-  "version": "26.6.25",
+  "version": "26.6.26",
   "private": false,
   "description": "Central South University campus network auto authentication CLI",
   "keywords": [
