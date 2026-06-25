@@ -90,18 +90,28 @@ curl -fsSL https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@main/openwrt/unins
 ```
 
 ## Node.js CLI
+
+建议使用当前 LTS 版本的 Node.js。
+
 ### 安装与运行
 
-运行：
+临时运行：
 
 ```sh
 npx csu-autoauth
+# yarn dlx csu-autoauth
+# pnpm dlx csu-autoauth
+# bunx csu-autoauth
 ```
 
-或全局安装后运行：
+或全局安装：
 
 ```sh
 npm install -g csu-autoauth
+# yarn global add csu-autoauth
+# pnpm add -g csu-autoauth
+# bun add -g csu-autoauth
+
 csu-autoauth
 ```
 
@@ -121,8 +131,9 @@ csu-autoauth -u YOUR_STUDENT_NUMBER -p YOUR_PASSWORD -t 1 -i 10
 -h, --help               查看帮助
 --config <path>          自定义配置文件路径
 --log-file <path>        自定义日志文件路径
+--once                   只认证一次后退出
 --no-save                本次运行不保存配置
---reset                  清除已保存配置并重新引导
+--reset                  重置配置
 ```
 
 ### 配置与日志路径

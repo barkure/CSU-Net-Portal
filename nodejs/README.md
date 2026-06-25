@@ -1,17 +1,26 @@
 ## Node.js CLI
 
-建议使用 Node.js 18 及以上版本。
+建议使用当前 LTS 版本的 Node.js。
 
 ### 安装与运行
 
+临时运行：
+
 ```sh
 npx csu-autoauth
+# yarn dlx csu-autoauth
+# pnpm dlx csu-autoauth
+# bunx csu-autoauth
 ```
 
 或全局安装：
 
 ```sh
 npm install -g csu-autoauth
+# yarn global add csu-autoauth
+# pnpm add -g csu-autoauth
+# bun add -g csu-autoauth
+
 csu-autoauth
 ```
 
@@ -31,8 +40,9 @@ csu-autoauth -u YOUR_STUDENT_NUMBER -p YOUR_PASSWORD -t 1 -i 10
 -h, --help               查看帮助
 --config <path>          自定义配置文件路径
 --log-file <path>        自定义日志文件路径
+--once                   只认证一次后退出
 --no-save                本次运行不保存配置
---reset                  清除已保存配置并重新引导
+--reset                  重置配置
 ```
 
 ### 配置与日志路径
@@ -43,9 +53,3 @@ csu-autoauth -u YOUR_STUDENT_NUMBER -p YOUR_PASSWORD -t 1 -i 10
 - Windows 默认日志文件：`%LOCALAPPDATA%\csu-autoauth\csu-autoauth.log`
 
 首次运行如果缺少必要参数，会进入交互式配置，并把结果保存到配置文件。
-
-如需重新配置：
-
-```sh
-csu-autoauth --reset
-```

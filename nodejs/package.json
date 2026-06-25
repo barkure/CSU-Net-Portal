@@ -1,8 +1,8 @@
 {
   "name": "csu-autoauth",
-  "version": "26.5.22",
+  "version": "26.6.25",
   "private": false,
-  "description": "Central South University network auto authentication CLI",
+  "description": "Central South University campus network auto authentication CLI",
   "keywords": [
     "csu",
     "campus-network",
@@ -36,7 +36,7 @@
     "test": "node --test test/*.test.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
-  "packageManager": "pnpm@11.2.2"
+  "packageManager": "bun@1.3.14"
 }
