@@ -459,7 +459,9 @@ function rotateLogIfNeeded(logFile, maxSize = DEFAULT_MAX_LOG_SIZE) {
   try {
     const stat = fs.statSync(logFile);
     if (stat.size >= maxSize) {
-      fs.renameSync(logFile, `${logFile}.1`);
+      const rotatedLogFile = `${logFile}.1`;
+      fs.rmSync(rotatedLogFile, { force: true });
+      fs.renameSync(logFile, rotatedLogFile);
       fs.writeFileSync(logFile, "");
     }
   } catch {
