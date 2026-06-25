@@ -79,6 +79,7 @@ Usage:
   csu-autoauth
   csu-autoauth --username <value> --password <value> --type <value> [--interval <seconds>]
   csu-autoauth -u <value> -p <value> -t <value> [-i <seconds>]
+  csu-autoauth --once -u <value> -p <value> -t <value>
 
 Options:
   -u, --username <value>   Student number
@@ -88,6 +89,7 @@ Options:
   -h, --help               Show this help
   --config <path>          Custom config file path
   --log-file <path>        Custom log file path
+  --once                   Authenticate once and exit
   --no-save                Do not persist config changes
   --reset                  Clear saved config and run setup again
 `);
@@ -102,6 +104,7 @@ function parseArgs(argv) {
     configFile: undefined,
     logFile: undefined,
     noSave: false,
+    once: false,
     reset: false,
     help: false
   };
@@ -116,6 +119,11 @@ function parseArgs(argv) {
 
     if (arg === "--no-save") {
       parsed.noSave = true;
+      continue;
+    }
+
+    if (arg === "--once") {
+      parsed.once = true;
       continue;
     }
 
@@ -557,6 +565,7 @@ function createState() {
     logFile,
     logToStdout: process.env.LOG_TO_STDOUT !== "0",
     noSave: args.noSave,
+    once: args.once,
     reset: args.reset,
     help: args.help
   };
@@ -586,6 +595,13 @@ async function main() {
   validateConfig(state.config, state.configFile);
   const log = createLogger(state);
   log("init CSU Network Portal");
+
+  if (state.once) {
+    log("Running one authentication attempt");
+    await login(state.config, log);
+    return;
+  }
+
   log(`Start monitoring network status, interval ${state.config.INTERVAL}s`);
 
   let lastStatus = "";
