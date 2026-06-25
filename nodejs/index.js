@@ -571,6 +571,16 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function omitUndefinedValues(source) {
+  const result = {};
+  for (const [key, value] of Object.entries(source)) {
+    if (value !== undefined) {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
 function createState() {
   const args = parseArgs(process.argv.slice(2));
   const defaults = getDefaultPaths();
@@ -578,19 +588,16 @@ function createState() {
   const dataDir = path.resolve(process.env.DATA_DIR || defaults.dataDir);
   const logFile = path.resolve(args.logFile || process.env.LOG_FILE || path.join(dataDir, "csu-autoauth.log"));
   const fileConfig = parseEnvFile(configFile);
-  const overrideConfig = {
-    USERNAME: args.USERNAME ?? process.env.CSU_USERNAME ?? defaultConfig.USERNAME,
-    PASSWORD: args.PASSWORD ?? process.env.CSU_PASSWORD ?? defaultConfig.PASSWORD,
-    TYPE: args.TYPE ?? process.env.CSU_TYPE ?? defaultConfig.TYPE,
-    INTERVAL: args.INTERVAL ?? process.env.CSU_INTERVAL ?? defaultConfig.INTERVAL
-  };
+  const overrideConfig = omitUndefinedValues({
+    USERNAME: args.USERNAME ?? process.env.CSU_USERNAME,
+    PASSWORD: args.PASSWORD ?? process.env.CSU_PASSWORD,
+    TYPE: args.TYPE ?? process.env.CSU_TYPE,
+    INTERVAL: args.INTERVAL ?? process.env.CSU_INTERVAL
+  });
   const config = normalizeConfig({
     ...defaultConfig,
     ...fileConfig,
-    USERNAME: overrideConfig.USERNAME ?? fileConfig.USERNAME ?? defaultConfig.USERNAME,
-    PASSWORD: overrideConfig.PASSWORD ?? fileConfig.PASSWORD ?? defaultConfig.PASSWORD,
-    TYPE: overrideConfig.TYPE ?? fileConfig.TYPE ?? defaultConfig.TYPE,
-    INTERVAL: overrideConfig.INTERVAL ?? fileConfig.INTERVAL ?? defaultConfig.INTERVAL
+    ...overrideConfig
   });
 
   return {
@@ -679,6 +686,7 @@ if (require.main === module) {
 module.exports = {
   main,
   run,
+  createState,
   parseLoginResponse,
   rotateLogIfNeeded
 };
