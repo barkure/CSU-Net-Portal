@@ -428,6 +428,7 @@ function createLogger(state) {
       clearHeartbeat(state.logToStdout);
       console.log(styleLogLine(currentTimestamp, message));
     }
+    rotateLogIfNeeded(state.logFile);
     fs.appendFileSync(state.logFile, `${line}\n`, "utf8");
   };
 }
@@ -435,6 +436,37 @@ function createLogger(state) {
 function getUserAccount(config) {
   const suffix = netSuffixMap[config.TYPE] ?? "";
   return suffix ? `${config.USERNAME}@${suffix}` : config.USERNAME;
+}
+
+function parseLoginResponse(text) {
+  if (!text) {
+    return { success: false, message: "" };
+  }
+  try {
+    const data = JSON.parse(text);
+    if (data.result === 1 || data.result === "1") {
+      return { success: true, message: data.msg || "Login successful" };
+    }
+    return { success: false, message: data.msg || text };
+  } catch {
+    return { success: false, message: text };
+  }
+}
+
+const DEFAULT_MAX_LOG_SIZE = 5 * 1024 * 1024;
+
+function rotateLogIfNeeded(logFile, maxSize = DEFAULT_MAX_LOG_SIZE) {
+  try {
+    const stat = fs.statSync(logFile);
+    if (stat.size >= maxSize) {
+      const rotatedLogFile = `${logFile}.1`;
+      fs.rmSync(rotatedLogFile, { force: true });
+      fs.renameSync(logFile, rotatedLogFile);
+      fs.writeFileSync(logFile, "");
+    }
+  } catch {
+    // file may not exist yet
+  }
 }
 
 function runCurl(args) {
@@ -505,14 +537,16 @@ async function login(config, log) {
   ]);
 
   if (curlResult.ok) {
-    log(`Login response: ${curlResult.stdout.trim()}`);
+    const parsed = parseLoginResponse(curlResult.stdout.trim());
+    log(parsed.success ? `Login successful: ${parsed.message}` : `Login failed: ${parsed.message}`);
     return;
   }
 
   if (curlResult.stdout || curlResult.stderr) {
     const curlMessage = `${curlResult.stdout}${curlResult.stderr}`.trim();
     if (curlMessage) {
-      log(`Login response: ${curlMessage}`);
+      const parsed = parseLoginResponse(curlMessage);
+      log(parsed.success ? `Login successful: ${parsed.message}` : `Login failed: ${parsed.message}`);
       return;
     }
   }
@@ -526,9 +560,10 @@ async function login(config, log) {
       signal: AbortSignal.timeout(5000)
     });
     const text = await response.text();
-    log(`Login response: ${text}`);
+    const parsed = parseLoginResponse(text);
+    log(parsed.success ? `Login successful: ${parsed.message}` : `Login failed: ${parsed.message}`);
   } catch (error) {
-    log(`Login response: ${error.message}`);
+    log(`Login failed: ${error.message}`);
   }
 }
 
@@ -643,5 +678,7 @@ if (require.main === module) {
 
 module.exports = {
   main,
-  run
+  run,
+  parseLoginResponse,
+  rotateLogIfNeeded
 };

@@ -76,36 +76,38 @@ login() {
     URL="https://10.1.1.1:802/eportal/portal/login"
     log "Authenticating as: $USER_ACCOUNT"
     response=$(curl -k -fsS -G "$URL" \
-        -d "user_account=$USER_ACCOUNT" \
-        -d "user_password=$PASSWORD" 2>&1 || true)
+        --data-urlencode "user_account=$USER_ACCOUNT" \
+        --data-urlencode "user_password=$PASSWORD" 2>&1 || true)
     log "Login response: $response"
 }
 
-init_log_file
-load_config || {
-    log "Failed to load UCI config: /etc/config/csu-autoauth"
-    exit 1
-}
-validate_config || exit 1
-log "Start monitoring network status (every ${INTERVAL}s)..."
+if [ "${CSU_TESTING:-0}" = "0" ]; then
+    init_log_file
+    load_config || {
+        log "Failed to load UCI config: /etc/config/csu-autoauth"
+        exit 1
+    }
+    validate_config || exit 1
+    log "Start monitoring network status (every ${INTERVAL}s)..."
 
-LAST_STATUS=""
+    LAST_STATUS=""
 
-while true; do
-    if is_online; then
-        CURRENT_STATUS="up"
-        if [ "$LAST_STATUS" != "$CURRENT_STATUS" ]; then
-            log "Network up"
-            LAST_STATUS="$CURRENT_STATUS"
+    while true; do
+        if is_online; then
+            CURRENT_STATUS="up"
+            if [ "$LAST_STATUS" != "$CURRENT_STATUS" ]; then
+                log "Network up"
+                LAST_STATUS="$CURRENT_STATUS"
+            fi
+        else
+            CURRENT_STATUS="down"
+            if [ "$LAST_STATUS" != "$CURRENT_STATUS" ]; then
+                log "Network down"
+                LAST_STATUS="$CURRENT_STATUS"
+            fi
+            log "Triggering authentication..."
+            login
         fi
-    else
-        CURRENT_STATUS="down"
-        if [ "$LAST_STATUS" != "$CURRENT_STATUS" ]; then
-            log "Network down"
-            LAST_STATUS="$CURRENT_STATUS"
-        fi
-        log "Triggering authentication..."
-        login
-    fi
-    sleep "$INTERVAL"
-done
+        sleep "$INTERVAL"
+    done
+fi
