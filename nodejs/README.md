@@ -7,18 +7,18 @@
 临时运行：
 
 ```sh
-npx csu-autoauth
+pnpm dlx csu-autoauth
+# npx csu-autoauth
 # yarn dlx csu-autoauth
-# pnpm dlx csu-autoauth
 # bunx csu-autoauth
 ```
 
 或全局安装：
 
 ```sh
-npm install -g csu-autoauth
+pnpm add -g csu-autoauth
+# npm install -g csu-autoauth
 # yarn global add csu-autoauth
-# pnpm add -g csu-autoauth
 # bun add -g csu-autoauth
 
 csu-autoauth
