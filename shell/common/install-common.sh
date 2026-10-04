@@ -7,14 +7,16 @@ DATA_DIR="$HOME_DIR/.local/share/csu-autoauth"
 CONFIG_DST="$CONFIG_DIR/config.conf"
 SCRIPT_DST="$BIN_DIR/csu-autoauth"
 LOG_FILE="$DATA_DIR/csu-autoauth.log"
-PROMPT_INPUT="/dev/stdin"
+PROMPT_INPUT_SET="${PROMPT_INPUT:-}"
+PROMPT_INPUT="${PROMPT_INPUT:-/dev/stdin}"
 
 USERNAME=""
 PASSWORD=""
 TYPE="1"
 INTERVAL="10"
 
-if [ ! -t 0 ] && [ -r /dev/tty ]; then
+# 显式设置 PROMPT_INPUT 时（测试用）不覆盖。
+if [ -z "$PROMPT_INPUT_SET" ] && [ ! -t 0 ] && [ -r /dev/tty ]; then
     PROMPT_INPUT="/dev/tty"
 fi
 

@@ -10,9 +10,9 @@ fi
 rm -f /etc/init.d/csu-autoauth
 rm -f /usr/bin/csu-autoauth.sh
 rm -f /etc/config/csu-autoauth
-rm -f /tmp/log/csu-autoauth.log
+rm -f /var/log/csu-autoauth.log
 
 printf '%s\n' "Removed init script: /etc/init.d/csu-autoauth"
 printf '%s\n' "Removed script: /usr/bin/csu-autoauth.sh"
 printf '%s\n' "Removed config: /etc/config/csu-autoauth"
-printf '%s\n' "Removed log file: /tmp/log/csu-autoauth.log"
+printf '%s\n' "Removed log file: /var/log/csu-autoauth.log"

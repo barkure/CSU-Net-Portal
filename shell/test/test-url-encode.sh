@@ -96,12 +96,8 @@ MOCK
 }
 
 run_functional_test "shell/common/csu-autoauth.sh" "$REPO_ROOT/shell/common/csu-autoauth.sh"
-# openwrt 依赖 /lib/functions.sh（OpenWrt 专属），非 OpenWrt 环境跳过功能测试
-if [ -f /lib/functions.sh ]; then
-    run_functional_test "openwrt/csu-autoauth.sh" "$REPO_ROOT/openwrt/csu-autoauth.sh"
-else
-    printf 'SKIP: openwrt/csu-autoauth.sh 功能测试（非 OpenWrt 环境）\n'
-fi
+# openwrt 的 UCI 依赖不在本测试范围内（仅调用 login），/lib/functions.sh 缺失时脚本会自行跳过加载
+run_functional_test "openwrt/csu-autoauth.sh" "$REPO_ROOT/openwrt/csu-autoauth.sh"
 
 # ── 汇总 ──────────────────────────────────────────────────────────────────────
 

@@ -4,11 +4,10 @@
 
 配置项分别是学号、密码、运营商、检测时间间隔（可选）。
 
-有如下四个版本：
+有如下三个版本：
 - [Shell (macOS / Linux)](https://github.com/barkure/CSU-Net-Portal#shell-macos--linux)
 - [PowerShell (Windows)](https://github.com/barkure/CSU-Net-Portal#powershell)
 - [OpenWrt](https://github.com/barkure/CSU-Net-Portal#openwrt)
-- [Node.js CLI](https://github.com/barkure/CSU-Net-Portal#nodejs-cli)
 
 ## Shell (macOS / Linux)
 ### 一键安装
@@ -44,21 +43,26 @@ curl -fsSL https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@main/shell/uninsta
 ## PowerShell (Windows)
 ### 一键安装
 
+以管理员身份打开 PowerShell 后执行：
+
 ```powershell
 irm https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@main/powershell/install.ps1 | iex
 ```
 
 ### 其他
 
+- 安装为 Windows 服务 `csu-autoauth`，开机自动运行，异常退出后自动重启
+- 脚本依赖 Windows 10 1803+ 自带的 `curl.exe`，缺失时启动会直接报错
 - 该脚本会自动创建：
 ```
 - $HOME\.local\bin\csu-autoauth.ps1
 - $HOME\.config\csu-autoauth\config.ps1
 - $HOME\.local\share\csu-autoauth\csu-autoauth.log
-- %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\csu-autoauth.vbs
+- $HOME\.local\bin\csu-autoauth-service.exe
+- $HOME\.local\bin\csu-autoauth-service.xml
 ```
 
-- 卸载命令：
+- 卸载命令（在管理员 PowerShell 中执行）：
 ```powershell
 irm https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@main/powershell/uninstall.ps1 | iex
 ```
@@ -75,7 +79,7 @@ curl -fsSL https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@main/openwrt/insta
 ```sh
 uci set csu-autoauth.main.username='USERNAME'
 uci set csu-autoauth.main.password='PASSWORD'
-uci set csu-autoauth.main.type='TYPE'
+uci set csu-autoauth.main.type='TYPE'   # 1=移动 2=联通 3=电信 4=校园网
 uci set csu-autoauth.main.interval='10'
 uci commit csu-autoauth
 /etc/init.d/csu-autoauth restart
@@ -84,64 +88,9 @@ uci commit csu-autoauth
 ### 其他
 
 - 这条命令依赖系统里已有 `curl`
+- 日志文件：`/var/log/csu-autoauth.log`
+- `type` 只接受 `1`/`2`/`3`/`4`，其它值会直接报错退出
 - 卸载命令：
 ```sh
 curl -fsSL https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@main/openwrt/uninstall.sh | sh
 ```
-
-## Node.js CLI
-
-建议使用当前 LTS 版本的 Node.js。
-
-### 安装与运行
-
-临时运行：
-
-```sh
-pnpm dlx csu-autoauth
-# npx csu-autoauth
-# yarn dlx csu-autoauth
-# bunx csu-autoauth
-```
-
-或全局安装：
-
-```sh
-pnpm add -g csu-autoauth
-# npm install -g csu-autoauth
-# yarn global add csu-autoauth
-# bun add -g csu-autoauth
-
-csu-autoauth
-```
-
-也支持直接带参数运行：
-
-```sh
-csu-autoauth -u YOUR_STUDENT_NUMBER -p YOUR_PASSWORD -t 1 -i 10
-```
-
-### 参数
-
-```text
--u, --username <value>   学号
--p, --password <value>   密码
--t, --type <value>       运营商，支持 1/2/3/4 或 cmcc/unicom/telecom/campus
--i, --interval <value>   检查间隔，单位秒，默认 10
--h, --help               查看帮助
---config <path>          自定义配置文件路径
---log-file <path>        自定义日志文件路径
---once                   只认证一次后退出
---no-save                本次运行不保存配置
---reset                  重置配置
-```
-
-### 配置与日志路径
-
-macOS / Linux：
-- `~/.config/csu-autoauth/config.env`
-- `~/.local/share/csu-autoauth/csu-autoauth.log`
-
-Windows：
-- `%APPDATA%\csu-autoauth\config.env`
-- `%LOCALAPPDATA%\csu-autoauth\csu-autoauth.log`

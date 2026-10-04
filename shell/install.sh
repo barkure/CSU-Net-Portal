@@ -2,7 +2,6 @@
 
 set -eu
 
-REPO_RAW_URL="${REPO_RAW_URL:-https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@main}"
 HOME_DIR="${HOME:?HOME is not set}"
 BIN_DIR="$HOME_DIR/.local/bin"
 CONFIG_DIR="$HOME_DIR/.config/csu-autoauth"
@@ -11,14 +10,17 @@ CONFIG_DST="$CONFIG_DIR/config.conf"
 SCRIPT_DST="$BIN_DIR/csu-autoauth"
 LOG_FILE="$DATA_DIR/csu-autoauth.log"
 OS_NAME="$(uname -s)"
-PROMPT_INPUT="/dev/stdin"
+PROMPT_INPUT_SET="${PROMPT_INPUT:-}"
+PROMPT_INPUT="${PROMPT_INPUT:-/dev/stdin}"
 
 USERNAME=""
 PASSWORD=""
 TYPE="1"
 INTERVAL="10"
 
-if [ ! -t 0 ] && [ -r /dev/tty ]; then
+# 非交互执行（如管道安装）时若存在终端，则改从 /dev/tty 读取，避免与 stdin（脚本本体）冲突。
+# 显式设置 PROMPT_INPUT 时（测试用）不覆盖。
+if [ -z "$PROMPT_INPUT_SET" ] && [ ! -t 0 ] && [ -r /dev/tty ]; then
     PROMPT_INPUT="/dev/tty"
 fi
 
@@ -26,6 +28,7 @@ if ! command -v curl >/dev/null 2>&1; then
     printf '%s\n' "curl not found." >&2
     exit 1
 fi
+
 
 if [ -f "$CONFIG_DST" ]; then
     # shellcheck disable=SC1090
@@ -124,7 +127,7 @@ collect_config() {
 
 install_common_files() {
     mkdir -p "$BIN_DIR" "$CONFIG_DIR" "$DATA_DIR"
-    curl -fsSL "$REPO_RAW_URL/shell/common/csu-autoauth.sh" -o "$SCRIPT_DST"
+    curl -fsSL "https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@main/shell/common/csu-autoauth.sh" -o "$SCRIPT_DST"
     chmod 755 "$SCRIPT_DST"
 
     umask 077

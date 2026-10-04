@@ -1,0 +1,63 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shell-tests:
+    name: Shell tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # 同时覆盖 GNU 与 BSD 工具链（sed/date 行为差异）
+        os:
+          - ubuntu-latest
+          - macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Run shell tests
+        shell: bash
+        run: |
+          set -e
+          for test_file in shell/test/*.sh; do
+            echo "::group::sh $test_file"
+            sh "$test_file"
+            echo "::endgroup::"
+          done
+
+  powershell-tests:
+    name: PowerShell tests
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # Windows 同时验证服务配置生成；Linux 验证跨平台单元测试和语法。
+      - name: Run PowerShell tests
+        shell: pwsh
+        run: ./powershell/test/test-csu-autoauth.ps1
+
+  windows-powershell-tests:
+    name: Windows PowerShell 5.1 tests
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Run Windows PowerShell tests
+        shell: powershell
+        run: ./powershell/test/test-csu-autoauth.ps1
