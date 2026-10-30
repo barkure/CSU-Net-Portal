@@ -20,7 +20,7 @@ $ServiceExe = Join-Path $BinDir $ServiceExeName
 $ServiceXml = Join-Path $BinDir "$ServiceName-service.xml"
 
 # WinSW（Windows Service Wrapper，CloudBees, 2.12.0）作为服务包装器：
-# x64/x86 文件随仓库提供，经 jsDelivr 下载，保留官方 release 文件的 SHA256 校验。
+# x64/x86 文件从 R2 下载域名获取，保留官方 release 文件的 SHA256 校验。
 $WinSwVersion = "2.12.0"
 $WinSwAssets = @{
     "AMD64" = @{ Name = "WinSW-x64.exe"; Sha256 = "05B82D46AD331CC16BDC00DE5C6332C1EF818DF8CEEFCD49C726553209B3A0DA" }
@@ -158,7 +158,7 @@ function Install-WinSw {
         }
     }
 
-    $url = "https://cdn.jsdelivr.net/gh/barkure/CSU-Net-Portal@main/powershell/vendor/winsw/$($asset.Name)"
+    $url = "https://downloads.barku.re/winsw/$WinSwVersion/$($asset.Name)"
     $tempExe = "$ServiceExe.download"
     Remove-Item -LiteralPath $tempExe -Force -ErrorAction SilentlyContinue
 

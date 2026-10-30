@@ -362,7 +362,71 @@ if ($USERNAME -eq $expectedUser -and $PASSWORD -eq $expectedPassword) {
     Test-ServiceModeCase -Label "xml escaping" -Env @{ CSU_SERVICE_NAME = "csu&aouth-test" } -ExpectServiceName "csu&aouth-test"
 }
 
-# ── 编码门禁：.ps1 必须带 UTF-8 BOM ──────────────────────────────────
+# 下载入口：执行真实下载保存代码，用本地替身避免联网或注册服务。
+$bootstrapPath = Join-Path (Split-Path -Parent $PSScriptRoot) "install.ps1"
+$bootstrapTokens = $null
+$bootstrapErrors = $null
+$bootstrapAst = [System.Management.Automation.Language.Parser]::ParseFile(
+    $bootstrapPath, [ref]$bootstrapTokens, [ref]$bootstrapErrors)
+$downloadBlock = $bootstrapAst.Find({
+    param($node)
+    $node -is [System.Management.Automation.Language.TryStatementAst] -and
+    $node.Body.Extent.Text.Contains('$webClient.DownloadData(')
+}, $true)
+
+if (-not $downloadBlock) {
+    Write-Fail "bootstrap download" "download block found" "missing"
+} else {
+    $downloadScript = [scriptblock]::Create($downloadBlock.Extent.Text)
+    $fixtureText = '$ErrorActionPreference = "Stop"' + "`r`n" + 'Write-Output "BOM_OK:中文"'
+    $fixtureEncoding = New-Object System.Text.UTF8Encoding($true)
+    [byte[]]$fixtureBytes = @($fixtureEncoding.GetPreamble()) + @($fixtureEncoding.GetBytes($fixtureText))
+    $savedScript = Join-Path $WorkDir "downloaded-installer.ps1"
+    $mockClient = New-Object PSObject -Property @{ Bytes = $fixtureBytes }
+    $mockClient | Add-Member -MemberType ScriptMethod -Name DownloadData -Value {
+        param($url)
+        return ,$this.Bytes
+    }
+    $mockClient | Add-Member -MemberType ScriptMethod -Name Dispose -Value {}
+
+    foreach ($bomCount in @(0, 1, 2)) {
+        [byte[]]$inputBytes = @()
+        for ($i = 0; $i -lt $bomCount; $i++) {
+            $inputBytes += $fixtureEncoding.GetPreamble()
+        }
+        $inputBytes += $fixtureEncoding.GetBytes($fixtureText)
+        $mockClient.Bytes = $inputBytes
+
+        & {
+            $webClient = $mockClient
+            $InstallerUrl = "https://example.invalid/install-main.ps1"
+            $tempPath = $savedScript
+            & $downloadScript
+        }
+
+        $actualBytes = [System.IO.File]::ReadAllBytes($savedScript)
+        if ([Convert]::ToBase64String($actualBytes) -eq [Convert]::ToBase64String($fixtureBytes)) {
+            Write-Pass "bootstrap normalizes $bomCount BOMs to one and preserves script text"
+        } else {
+            Write-Fail "bootstrap normalizes $bomCount BOMs" "single BOM and unchanged text" ([BitConverter]::ToString($actualBytes))
+        }
+    }
+
+    $executionHosts = @($PwshPath)
+    if ($IsWindowsHost) {
+        $executionHosts += (Get-Command powershell.exe -ErrorAction Stop).Source
+    }
+    foreach ($executionHost in ($executionHosts | Select-Object -Unique)) {
+        $executionOutput = & $executionHost -NoProfile -ExecutionPolicy Bypass -File $savedScript 2>&1
+        if ($LASTEXITCODE -eq 0 -and ($executionOutput -join "`n") -eq "BOM_OK:中文") {
+            Write-Pass "downloaded installer executes with Chinese text [$executionHost]"
+        } else {
+            Write-Fail "downloaded installer execution [$executionHost]" "BOM_OK:中文" ($executionOutput -join "`n")
+        }
+    }
+}
+
+# ── 编码门禁：ASCII 下载入口无 BOM，其余 .ps1 带 UTF-8 BOM ──────────────────────────────────
 # Windows PowerShell 5.1 对无 BOM 的文件按 ANSI(GBK) 解码，中文注释/字符串会解析错乱，
 # 而 Windows 服务正是用 powershell.exe (5.1) 跑这个脚本；CI 上的 pwsh 7 默认 UTF-8，
 # 会掩盖这个问题，所以这里显式断言 BOM 存在。
@@ -373,6 +437,14 @@ $encodingTargets = @(Get-ChildItem -Path $PowerShellRootForEncoding -Filter "*.p
 
 foreach ($file in $encodingTargets) {
     $bytes = [System.IO.File]::ReadAllBytes($file.FullName)
+    if ($file.FullName -eq $bootstrapPath) {
+        if (@($bytes | Where-Object { $_ -gt 127 }).Count -eq 0) {
+            Write-Pass "bootstrap is ASCII without BOM for irm | iex"
+        } else {
+            Write-Fail "bootstrap encoding" "ASCII without BOM" "non-ASCII bytes found"
+        }
+        continue
+    }
     $hasBom = ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF)
 
     if ($hasBom) {
