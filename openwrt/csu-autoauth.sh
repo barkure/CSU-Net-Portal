@@ -36,6 +36,11 @@ load_config() {
     config_get PASSWORD "$CONFIG_SECTION" password
     config_get TYPE "$CONFIG_SECTION" type "1"
     config_get INTERVAL "$CONFIG_SECTION" interval "10"
+    config_get uci_log_file "$CONFIG_SECTION" log_file ""
+    if [ -n "$uci_log_file" ]; then
+        LOG_FILE="$uci_log_file"
+        LOG_DIR=$(dirname "$LOG_FILE")
+    fi
 
     resolve_net_suffix
 }
@@ -119,11 +124,12 @@ login() {
 }
 
 if [ "${CSU_TESTING:-0}" = "0" ]; then
-    init_log_file
-    load_config || {
+    if ! load_config; then
+        init_log_file
         log "Failed to load UCI config: /etc/config/csu-autoauth"
         exit 1
-    }
+    fi
+    init_log_file
     validate_config || exit 1
     log "Start monitoring network status (every ${INTERVAL}s)..."
 

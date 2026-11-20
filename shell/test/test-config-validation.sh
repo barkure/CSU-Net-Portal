@@ -147,5 +147,42 @@ EOF
 check_shell_rejects "缺少凭据" "Missing USERNAME or PASSWORD"
 check_openwrt "缺少凭据" 1 "Missing username or password"
 
+# ── OpenWrt UCI log_file 覆盖 ────────────────────────────────────────────────
+
+check_openwrt_log_file_override() {
+    custom_log="$TMPDIR_ROOT/custom/csu.log"
+    set +e
+    output=$(CSU_TESTING=1 CUSTOM_LOG="$custom_log" sh -c '
+        . "$1"
+        config_load() { return 0; }
+        config_get() {
+            var_name="$1"
+            key="$3"
+            default_val="${4:-}"
+            case "$key" in
+                username) eval "$var_name=20230001" ;;
+                password) eval "$var_name=secret" ;;
+                type)     eval "$var_name=1" ;;
+                interval) eval "$var_name=10" ;;
+                log_file) eval "$var_name=\$CUSTOM_LOG" ;;
+                *)        eval "$var_name=\$default_val" ;;
+            esac
+        }
+        load_config
+        printf "%s|%s\n" "$LOG_DIR" "$LOG_FILE"
+    ' sh "$OPENWRT_SCRIPT" 2>&1)
+    actual_rc=$?
+    set -e
+
+    want="$TMPDIR_ROOT/custom|$custom_log"
+    if [ "$actual_rc" -eq 0 ] && [ "$output" = "$want" ]; then
+        pass "openwrt/csu-autoauth.sh [UCI log_file 覆盖] LOG_DIR 与 LOG_FILE 更新为 '$custom_log'"
+    else
+        fail "openwrt/csu-autoauth.sh [UCI log_file 覆盖]" "rc=0 output='$want'" "rc=$actual_rc output='$output'"
+    fi
+}
+
+check_openwrt_log_file_override
+
 printf '\n%d passed, %d failed\n' "$PASS_COUNT" "$FAIL_COUNT"
 [ "$FAIL_COUNT" -eq 0 ] || exit 1
