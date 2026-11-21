@@ -246,6 +246,11 @@ Test-LoginCase -Label "non json" `
     -ExpectLogFragment "Login failed: <html>502</html>" `
     -ExpectArgsFragment "user_password=s3cret"
 
+Test-LoginCase -Label "timeouts" `
+    -StubResponse '{"result":1,"msg":"logged in"}' `
+    -ExpectLogFragment "Login successful: logged in" `
+    -ExpectArgsFragment "--connect-timeout 5 --max-time 10"
+
 # ── 安装器：服务模式（仅 Windows；CI 的 Linux runner 会跳过） ───────────────
 
 $IsWindowsHost = ($env:OS -eq "Windows_NT")

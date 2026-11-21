@@ -107,7 +107,7 @@ login() {
 
     URL="https://10.1.1.1:802/eportal/portal/login"
     log "Authenticating as: $USER_ACCOUNT"
-    response=$(curl -k -fsS -G "$URL" \
+    response=$(curl -k -fsS --connect-timeout 5 --max-time 10 -G "$URL" \
         --data-urlencode "user_account=$USER_ACCOUNT" \
         --data-urlencode "user_password=$PASSWORD" 2>&1 || true)
 

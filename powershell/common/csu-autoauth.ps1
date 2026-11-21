@@ -136,7 +136,7 @@ function Invoke-Login {
 
     Write-Log "Authenticating as: $userAccount"
     try {
-        $response = & curl.exe -k -fsS -G $url `
+        $response = & curl.exe -k -fsS --connect-timeout 5 --max-time 10 -G $url `
             --data-urlencode "user_account=$userAccount" `
             --data-urlencode "user_password=$PASSWORD" 2>&1
     } catch {
