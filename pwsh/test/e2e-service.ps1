@@ -100,8 +100,8 @@ try {
     }
     Write-Host "  no conflicting registration"
 
-    # 服务跑 PS 5.1；单独门禁 BOM/解析。
-    Write-Step "Windows PowerShell 5.1 parse gate"
+    # 服务跑 PS 5.1；单独检查 BOM/解析。
+    Write-Step "Windows PowerShell 5.1 parse check"
     $ps51 = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
     $parseHarness = Join-Path $Sandbox 'parse-count.ps1'
     $parseHarnessBody = @'

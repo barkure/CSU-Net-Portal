@@ -38,6 +38,7 @@ upload "$REPO_ROOT/sh/openwrt/csu-net-auth.config" "sh/openwrt/csu-net-auth.conf
 upload "$REPO_ROOT/pwsh/install.ps1" "pwsh/install.ps1" "text/plain; charset=utf-8"
 upload "$REPO_ROOT/pwsh/uninstall.ps1" "pwsh/uninstall.ps1" "text/plain; charset=utf-8"
 upload "$REPO_ROOT/pwsh/common/install-main.ps1" "pwsh/common/install-main.ps1" "text/plain; charset=utf-8"
+upload "$REPO_ROOT/pwsh/common/uninstall-main.ps1" "pwsh/common/uninstall-main.ps1" "text/plain; charset=utf-8"
 upload "$REPO_ROOT/pwsh/common/csu-net-auth.ps1" "pwsh/common/csu-net-auth.ps1" "text/plain; charset=utf-8"
 upload "$REPO_ROOT/pwsh/common/config.ps1.example" "pwsh/common/config.ps1.example" "text/plain; charset=utf-8"
 

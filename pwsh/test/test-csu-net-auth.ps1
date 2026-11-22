@@ -400,18 +400,19 @@ if (-not $downloadBlock) {
     }
 }
 
-# 编码门禁：下载入口 ASCII 无 BOM；其余 .ps1 须 UTF-8 BOM（PS 5.1）。
+# 编码检查：irm|iex 入口 ASCII 无 BOM；其余 .ps1 须 UTF-8 BOM（PS 5.1）。
 $PowerShellRootForEncoding = Join-Path (Split-Path -Parent $PSScriptRoot) "."
+$bootstrapNames = @("install.ps1", "uninstall.ps1")
 $encodingTargets = @(Get-ChildItem -Path $PowerShellRootForEncoding -Filter "*.ps1" -Recurse) +
                    @(Get-ChildItem -Path $PowerShellRootForEncoding -Filter "*.ps1.example" -Recurse)
 
 foreach ($file in $encodingTargets) {
     $bytes = [System.IO.File]::ReadAllBytes($file.FullName)
-    if ($file.FullName -eq $bootstrapPath) {
+    if ($bootstrapNames -contains $file.Name -and $file.DirectoryName -eq (Resolve-Path $PowerShellRootForEncoding).Path) {
         if (@($bytes | Where-Object { $_ -gt 127 }).Count -eq 0) {
-            Write-Pass "bootstrap is ASCII without BOM for irm | iex"
+            Write-Pass "bootstrap [$($file.Name)] is ASCII without BOM for irm | iex"
         } else {
-            Write-Fail "bootstrap encoding" "ASCII without BOM" "non-ASCII bytes found"
+            Write-Fail "bootstrap [$($file.Name)] encoding" "ASCII without BOM" "non-ASCII bytes found"
         }
         continue
     }
@@ -424,7 +425,7 @@ foreach ($file in $encodingTargets) {
     }
 }
 
-# 语法解析门禁
+# 语法解析检查
 $PowerShellRoot = Join-Path (Split-Path -Parent $PSScriptRoot) "."
 foreach ($file in Get-ChildItem -Path $PowerShellRoot -Filter *.ps1 -Recurse) {
     $tokens = $null
