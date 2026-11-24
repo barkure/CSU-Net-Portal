@@ -15,7 +15,7 @@ $ServiceExeName = "$ServiceName.exe"
 $ServiceExe = Join-Path $BinDir $ServiceExeName
 $ServiceXml = Join-Path $BinDir "$ServiceName.xml"
 
-# WinSW 2.12.0（CloudBees），从 ssuu.us 下载并校验 SHA256。
+# WinSW 2.12.0（CloudBees），从 dl.barkure.cn（缤纷云 CDN）下载并校验 SHA256。
 $WinSwVersion = "2.12.0"
 $WinSwAssets = @{
     "AMD64" = @{ Name = "WinSW-x64.exe"; Sha256 = "05B82D46AD331CC16BDC00DE5C6332C1EF818DF8CEEFCD49C726553209B3A0DA" }
@@ -137,7 +137,7 @@ function Install-WinSw {
         }
     }
 
-    $url = "https://ssuu.us/winsw/$WinSwVersion/$($asset.Name)"
+    $url = "https://dl.barkure.cn/winsw/$WinSwVersion/$($asset.Name)"
     $tempExe = "$ServiceExe.download"
     Remove-Item -LiteralPath $tempExe -Force -ErrorAction SilentlyContinue
 

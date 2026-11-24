@@ -138,7 +138,7 @@ UNINSTALL="$REPO_ROOT/sh/uninstall.sh"
 OPENWRT_SCRIPT="$REPO_ROOT/sh/openwrt/csu-net-auth.sh"
 
 check_file_contains "sh/install.sh 默认 BASE_URL 为 ssuu.us" "$INSTALL" 'BASE_URL="${CSU_BASE_URL:-https://ssuu.us/csunet}"'
-check_file_contains "sh/install.sh 从 R2 拉取 openwrt 脚本" "$INSTALL" 'curl -fsSL "$BASE_URL/sh/openwrt/csu-net-auth.sh" -o /usr/bin/csu-net-auth.sh'
+check_file_contains "sh/install.sh 从 BASE_URL 拉取 openwrt 脚本" "$INSTALL" 'curl -fsSL "$BASE_URL/sh/openwrt/csu-net-auth.sh" -o /usr/bin/csu-net-auth.sh'
 check_file_contains "sh/install.sh 交互写入 UCI" "$INSTALL" 'uci set csu-net-auth.main.username="$USERNAME"'
 
 check_file_contains "openwrt 脚本日志目录为 /var/log" "$OPENWRT_SCRIPT" 'LOG_DIR="${LOG_DIR:-/var/log}"'
